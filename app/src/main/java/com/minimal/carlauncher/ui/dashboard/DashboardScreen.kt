@@ -60,6 +60,7 @@ fun DashboardScreen(
     val savedRadioStations by viewModel.savedRadioStations.collectAsState()
     val isDarkMode by viewModel.isDarkMode.collectAsState()
     val isMinimalLayout by viewModel.isMinimalLayout.collectAsState()
+    val minimalPalette by viewModel.minimalPalette.collectAsState()
     val minimalTime by viewModel.minimalTime.collectAsState()
     val minimalAmPm by viewModel.minimalAmPm.collectAsState()
     val minimalDate by viewModel.minimalDate.collectAsState()
@@ -312,6 +313,8 @@ fun DashboardScreen(
             onToggleDarkMode = { viewModel.toggleDarkMode() },
             isMinimalLayout = isMinimalLayout,
             onToggleMinimalLayout = { viewModel.toggleMinimalLayout() },
+            minimalPalette = minimalPalette,
+            onSelectMinimalPalette = { palette -> viewModel.selectMinimalPalette(palette) },
             isAutoStartEnabled = isAutoStartEnabled,
             autoStartAppLabel = autoStartApp?.label,
             onAutoStartEnabledChange = { enabled -> viewModel.setAutoStartEnabled(enabled) },

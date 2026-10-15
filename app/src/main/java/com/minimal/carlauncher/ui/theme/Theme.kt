@@ -48,10 +48,11 @@ private fun createColorScheme(colors: CarColors, isDark: Boolean) = if (isDark) 
 @Composable
 fun CarLauncherTheme(
     isDarkMode: Boolean = false,
+    colorsOverride: CarColors? = null,
     content: @Composable () -> Unit
 ) {
-    val colors = if (isDarkMode) DarkCarColors else LightCarColors
-    val colorScheme = createColorScheme(colors, isDarkMode)
+    val colors = colorsOverride ?: if (isDarkMode) DarkCarColors else LightCarColors
+    val colorScheme = createColorScheme(colors, colors.isDark)
 
     // The launcher uses fixed, screen-filling layouts. A large system font size
     // (common on head units and phones) would push text out of its cards, so

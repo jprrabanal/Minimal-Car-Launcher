@@ -34,6 +34,7 @@ class AppRepository(private val context: Context) {
         private const val KEY_MAP_DARK_MODE = "key_map_dark_mode"
         private const val KEY_DARK_MODE = "key_dark_mode"
         private const val KEY_MINIMAL_LAYOUT = "key_minimal_layout"
+        private const val KEY_MINIMAL_PALETTE = "key_minimal_palette"
         const val MAX_DOCK_APPS = 6
     }
 
@@ -325,6 +326,12 @@ class AppRepository(private val context: Context) {
 
     fun setMinimalLayout(isMinimal: Boolean) {
         prefs.edit().putBoolean(KEY_MINIMAL_LAYOUT, isMinimal).apply()
+    }
+
+    fun getMinimalPaletteName(): String? = prefs.getString(KEY_MINIMAL_PALETTE, null)
+
+    fun setMinimalPaletteName(name: String) {
+        prefs.edit().putString(KEY_MINIMAL_PALETTE, name).apply()
     }
 
     fun isDarkMode(): Boolean = prefs.getBoolean(KEY_DARK_MODE, false)

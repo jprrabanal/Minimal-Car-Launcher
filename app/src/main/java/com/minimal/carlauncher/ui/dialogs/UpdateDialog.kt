@@ -3,6 +3,7 @@ package com.minimal.carlauncher.ui.dialogs
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -56,6 +57,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.minimal.carlauncher.service.UpdateInfo
+import com.minimal.carlauncher.ui.theme.MinimalPalette
 import com.minimal.carlauncher.ui.theme.AccentAmber
 import com.minimal.carlauncher.ui.theme.AccentCyan
 import com.minimal.carlauncher.ui.theme.AccentGreen
@@ -80,6 +82,8 @@ fun AboutDialog(
     onToggleDarkMode: () -> Unit = {},
     isMinimalLayout: Boolean = false,
     onToggleMinimalLayout: () -> Unit = {},
+    minimalPalette: MinimalPalette = MinimalPalette.DEFAULT,
+    onSelectMinimalPalette: (MinimalPalette) -> Unit = {},
     isAutoStartEnabled: Boolean = false,
     autoStartAppLabel: String? = null,
     onAutoStartEnabledChange: (Boolean) -> Unit = {},
@@ -524,75 +528,83 @@ fun AboutDialog(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // 4. Cockpit Theme Setting (Day / Night Light Mode Toggle)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(CarSurfaceVariant)
-                            .border(1.dp, CarBorder, RoundedCornerShape(12.dp))
-                            .clickable { onToggleDarkMode() }
-                            .padding(horizontal = 14.dp, vertical = 10.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                    if (isMinimalLayout) {
+                        // 4. Minimal Colors: soft dark themes (the Minimal style is always dark)
+                        MinimalPalettePicker(
+                            selected = minimalPalette,
+                            onSelect = onSelectMinimalPalette
+                        )
+                    } else {
+                        // 4. Cockpit Theme Setting (Day / Night Light Mode Toggle)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(CarSurfaceVariant)
+                                .border(1.dp, CarBorder, RoundedCornerShape(12.dp))
+                                .clickable { onToggleDarkMode() }
+                                .padding(horizontal = 14.dp, vertical = 10.dp)
                         ) {
                             Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(CircleShape)
-                                        .background(if (isDarkMode) AccentCyan.copy(alpha = 0.15f) else AccentAmber.copy(alpha = 0.15f)),
-                                    contentAlignment = Alignment.Center
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .background(if (isDarkMode) AccentCyan.copy(alpha = 0.15f) else AccentAmber.copy(alpha = 0.15f)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isDarkMode) Icons.Default.DarkMode else Icons.Default.LightMode,
+                                            contentDescription = null,
+                                            tint = if (isDarkMode) AccentCyan else AccentAmber,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                    Column {
+                                        Text(
+                                            text = "Cockpit Theme",
+                                            fontSize = 13.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TextPrimary
+                                        )
+                                        Text(
+                                            text = if (isDarkMode) "Dark (Obsidian Night Mode)" else "Light (Daylight High-Contrast)",
+                                            fontSize = 11.sp,
+                                            color = TextSecondary
+                                        )
+                                    }
+                                }
+
+                                Button(
+                                    onClick = onToggleDarkMode,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = if (isDarkMode) AccentCyan else AccentAmber
+                                    ),
+                                    shape = RoundedCornerShape(10.dp),
+                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                                 ) {
                                     Icon(
-                                        imageVector = if (isDarkMode) Icons.Default.DarkMode else Icons.Default.LightMode,
+                                        imageVector = if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
                                         contentDescription = null,
-                                        tint = if (isDarkMode) AccentCyan else AccentAmber,
-                                        modifier = Modifier.size(20.dp)
+                                        tint = if (isDarkMode) Color(0xFF0A0E17) else Color.White,
+                                        modifier = Modifier.size(15.dp)
                                     )
-                                }
-                                Column {
+                                    Spacer(modifier = Modifier.width(6.dp))
                                     Text(
-                                        text = "Cockpit Theme",
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = TextPrimary
-                                    )
-                                    Text(
-                                        text = if (isDarkMode) "Dark (Obsidian Night Mode)" else "Light (Daylight High-Contrast)",
+                                        text = if (isDarkMode) "Switch to Light" else "Switch to Dark",
                                         fontSize = 11.sp,
-                                        color = TextSecondary
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isDarkMode) Color(0xFF0A0E17) else Color.White
                                     )
                                 }
-                            }
-
-                            Button(
-                                onClick = onToggleDarkMode,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (isDarkMode) AccentCyan else AccentAmber
-                                ),
-                                shape = RoundedCornerShape(10.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                            ) {
-                                Icon(
-                                    imageVector = if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
-                                    contentDescription = null,
-                                    tint = if (isDarkMode) Color(0xFF0A0E17) else Color.White,
-                                    modifier = Modifier.size(15.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = if (isDarkMode) "Switch to Light" else "Switch to Dark",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isDarkMode) Color(0xFF0A0E17) else Color.White
-                                )
                             }
                         }
                     }
@@ -777,6 +789,73 @@ private fun FeatureChip(
                 fontSize = 10.sp,
                 color = TextMuted
             )
+        }
+    }
+}
+
+@Composable
+private fun MinimalPalettePicker(
+    selected: MinimalPalette,
+    onSelect: (MinimalPalette) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(CarSurfaceVariant)
+            .border(1.dp, CarBorder, RoundedCornerShape(12.dp))
+            .padding(horizontal = 14.dp, vertical = 10.dp)
+    ) {
+        Text(
+            text = "Minimal Colors",
+            fontSize = 13.sp,
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
+        )
+        Text(
+            text = "${selected.label} (soft dark theme, easy on the eyes)",
+            fontSize = 11.sp,
+            color = TextSecondary
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            MinimalPalette.values().forEach { palette ->
+                val isSelected = palette == selected
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(palette.bg)
+                        .border(
+                            width = if (isSelected) 3.dp else 1.dp,
+                            color = if (isSelected) palette.accent else palette.border,
+                            shape = CircleShape
+                        )
+                        .clickable { onSelect(palette) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isSelected) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = palette.label,
+                            tint = palette.accent,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp)
+                                .clip(CircleShape)
+                                .background(palette.accent)
+                        )
+                    }
+                }
+            }
         }
     }
 }

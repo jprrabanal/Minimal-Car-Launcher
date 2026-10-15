@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.core.content.ContextCompat
 import com.minimal.carlauncher.ui.dashboard.DashboardScreen
 import com.minimal.carlauncher.ui.theme.CarLauncherTheme
+import com.minimal.carlauncher.ui.theme.minimalCarColors
 import com.minimal.carlauncher.ui.viewmodel.LauncherViewModel
 
 class MainActivity : ComponentActivity() {
@@ -49,7 +50,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val isDarkMode by viewModel.isDarkMode.collectAsState()
-            CarLauncherTheme(isDarkMode = isDarkMode) {
+            val isMinimalLayout by viewModel.isMinimalLayout.collectAsState()
+            val minimalPalette by viewModel.minimalPalette.collectAsState()
+            // The Minimal style always uses its own soft dark color theme
+            CarLauncherTheme(
+                isDarkMode = isDarkMode,
+                colorsOverride = if (isMinimalLayout) minimalCarColors(minimalPalette) else null
+            ) {
                 DashboardScreen(viewModel = viewModel)
             }
         }

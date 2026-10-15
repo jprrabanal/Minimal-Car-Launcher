@@ -57,6 +57,45 @@ val LightCarColors = CarColors(
     isDark = false
 )
 
+/**
+ * Soft dark color themes for the Minimal home screen. None of them use pure
+ * black or pure white: medium-dark backgrounds and slightly dimmed text are
+ * easier on the eyes when driving at night.
+ */
+enum class MinimalPalette(
+    val label: String,
+    val bg: Color,
+    val surface: Color,
+    val surfaceVariant: Color,
+    val border: Color,
+    val accent: Color
+) {
+    SLATE("Slate", Color(0xFF1E2430), Color(0xFF272E3B), Color(0xFF323A49), Color(0xFF424C5E), Color(0xFF7DD3FC)),
+    MIDNIGHT("Midnight Blue", Color(0xFF1A2233), Color(0xFF222C40), Color(0xFF2C384F), Color(0xFF3B4964), Color(0xFF93C5FD)),
+    GRAPHITE("Graphite", Color(0xFF242526), Color(0xFF2E2F31), Color(0xFF393A3D), Color(0xFF4A4B4F), Color(0xFFD4D4D8)),
+    FOREST("Forest", Color(0xFF1C2622), Color(0xFF24302B), Color(0xFF2E3B35), Color(0xFF3D4C45), Color(0xFF86EFAC)),
+    PLUM("Plum", Color(0xFF251E2C), Color(0xFF2E2637), Color(0xFF393042), Color(0xFF4A3F55), Color(0xFFD8B4FE)),
+    MOCHA("Mocha", Color(0xFF29231F), Color(0xFF332B26), Color(0xFF3E3530), Color(0xFF4F443D), Color(0xFFFDBA74));
+
+    companion object {
+        val DEFAULT = SLATE
+
+        fun fromName(name: String?): MinimalPalette =
+            values().firstOrNull { it.name == name } ?: DEFAULT
+    }
+}
+
+fun minimalCarColors(palette: MinimalPalette): CarColors = DarkCarColors.copy(
+    bg = palette.bg,
+    surface = palette.surface,
+    surfaceVariant = palette.surfaceVariant,
+    border = palette.border,
+    textPrimary = Color(0xFFE6E9EF),
+    textSecondary = Color(0xFFA9B1BE),
+    textMuted = Color(0xFF7D8696),
+    accentCyan = palette.accent
+)
+
 val LocalCarColors = staticCompositionLocalOf { DarkCarColors }
 
 // Dynamic Composable Color Accessors:

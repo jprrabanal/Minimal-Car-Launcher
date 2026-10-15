@@ -14,6 +14,7 @@ import com.minimal.carlauncher.service.RadioManager
 import com.minimal.carlauncher.service.SpeedometerManager
 import com.minimal.carlauncher.service.UpdateInfo
 import com.minimal.carlauncher.service.UpdateManager
+import com.minimal.carlauncher.ui.theme.MinimalPalette
 import org.osmdroid.util.GeoPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -110,6 +111,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     private val _isMinimalLayout = MutableStateFlow(repository.isMinimalLayout())
     val isMinimalLayout: StateFlow<Boolean> = _isMinimalLayout.asStateFlow()
+
+    private val _minimalPalette = MutableStateFlow(MinimalPalette.fromName(repository.getMinimalPaletteName()))
+    val minimalPalette: StateFlow<MinimalPalette> = _minimalPalette.asStateFlow()
 
     // Long press action dialog states
     private val _selectedDockAppForAction = MutableStateFlow<AppInfo?>(null)
@@ -627,6 +631,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         val next = !_isMinimalLayout.value
         _isMinimalLayout.value = next
         repository.setMinimalLayout(next)
+    }
+
+    fun selectMinimalPalette(palette: MinimalPalette) {
+        _minimalPalette.value = palette
+        repository.setMinimalPaletteName(palette.name)
     }
 
     fun toggleDarkMode() {
