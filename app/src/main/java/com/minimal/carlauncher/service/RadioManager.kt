@@ -197,10 +197,15 @@ class RadioManager(private val context: Context) {
     private val radioReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctx: Context?, intent: Intent?) {
             if (intent == null) return
-            val isLauncher = intent.getBooleanExtra("is_launcher_source", false)
-            DiagnosticsManager.logIntent(intent, isIncoming = !isLauncher)
-            if (isLauncher) return
-            extractFromIntent(intent)
+            // Broadcasts can come from any app; never let a malformed one crash the launcher
+            try {
+                val isLauncher = intent.getBooleanExtra("is_launcher_source", false)
+                DiagnosticsManager.logIntent(intent, isIncoming = !isLauncher)
+                if (isLauncher) return
+                extractFromIntent(intent)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 

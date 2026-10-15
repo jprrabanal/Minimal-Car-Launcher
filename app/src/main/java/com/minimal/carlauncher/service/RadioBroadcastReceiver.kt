@@ -11,9 +11,15 @@ import android.content.Intent
 class RadioBroadcastReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context?, intent: Intent?) {
         if (intent == null) return
-        val isLauncher = intent.getBooleanExtra("is_launcher_source", false)
-        DiagnosticsManager.logIntent(intent, isIncoming = !isLauncher)
-        if (isLauncher) return
-        RadioManager.onGlobalBroadcast(intent)
+        // This receiver is exported, so any app can send it data. A malformed
+        // intent must never crash the launcher (home screen).
+        try {
+            val isLauncher = intent.getBooleanExtra("is_launcher_source", false)
+            DiagnosticsManager.logIntent(intent, isIncoming = !isLauncher)
+            if (isLauncher) return
+            RadioManager.onGlobalBroadcast(intent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 }

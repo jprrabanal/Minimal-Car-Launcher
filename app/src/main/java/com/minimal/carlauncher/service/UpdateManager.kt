@@ -15,6 +15,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import java.security.MessageDigest
 
 data class UpdateInfo(
     val tagName: String,
@@ -22,7 +23,9 @@ data class UpdateInfo(
     val changelog: String,
     val apkDownloadUrl: String,
     val apkSize: Long,
-    val isUpdateAvailable: Boolean
+    val isUpdateAvailable: Boolean,
+    /** URL of the "<apk>.sha256" release asset used to verify the download. */
+    val checksumUrl: String
 )
 
 class UpdateManager(private val context: Context) {
@@ -125,94 +128,147 @@ class UpdateManager(private val context: Context) {
         val changelog = json.optString("body", "No changelog provided.")
 
         val assets = json.optJSONArray("assets") ?: return null
+        val urlsByName = mutableMapOf<String, String>()
+        val sizesByName = mutableMapOf<String, Long>()
         for (i in 0 until assets.length()) {
             val asset = assets.getJSONObject(i)
             val name = asset.optString("name", "")
             val downloadUrl = asset.optString("browser_download_url", "")
-            val size = asset.optLong("size", 0L)
-            if (name.endsWith(".apk", ignoreCase = true) && downloadUrl.isNotBlank()) {
-                val isUpdateAvailable = isNewerVersion(tagName)
-                return UpdateInfo(
-                    tagName = tagName,
-                    title = title,
-                    changelog = changelog,
-                    apkDownloadUrl = downloadUrl,
-                    apkSize = size,
-                    isUpdateAvailable = isUpdateAvailable
-                )
+            if (name.isNotBlank() && downloadUrl.isNotBlank()) {
+                urlsByName[name] = downloadUrl
+                sizesByName[name] = asset.optLong("size", 0L)
             }
+        }
+
+        // Only offer releases that publish a SHA-256 checksum next to the APK,
+        // so the download can be verified before it is installed.
+        for ((name, downloadUrl) in urlsByName) {
+            if (!name.endsWith(".apk", ignoreCase = true)) continue
+            val checksumUrl = urlsByName["$name.sha256"] ?: continue
+            return UpdateInfo(
+                tagName = tagName,
+                title = title,
+                changelog = changelog,
+                apkDownloadUrl = downloadUrl,
+                apkSize = sizesByName[name] ?: 0L,
+                isUpdateAvailable = isNewerVersion(tagName),
+                checksumUrl = checksumUrl
+            )
         }
         return null
     }
 
+    /**
+     * Opens an HTTPS connection, following up to 5 redirects (GitHub release
+     * downloads redirect to a CDN). Any non-HTTPS URL is refused, so the APK
+     * can never be fetched over an unencrypted connection.
+     */
+    private fun openHttpsFollowingRedirects(startUrl: String): HttpURLConnection {
+        var currentUrl = URL(startUrl)
+        repeat(6) {
+            if (currentUrl.protocol != "https") {
+                throw SecurityException("Refusing non-HTTPS URL: $currentUrl")
+            }
+            val connection = (currentUrl.openConnection() as HttpURLConnection).apply {
+                instanceFollowRedirects = false
+                connectTimeout = 15000
+                readTimeout = 15000
+                setRequestProperty("User-Agent", "MinimalCarLauncher-Android")
+            }
+            val status = connection.responseCode
+            if (status in listOf(301, 302, 303, 307, 308)) {
+                val location = connection.getHeaderField("Location")
+                connection.disconnect()
+                if (location.isNullOrBlank()) throw java.io.IOException("Redirect without Location")
+                currentUrl = URL(currentUrl, location)
+            } else {
+                return connection
+            }
+        }
+        throw java.io.IOException("Too many redirects")
+    }
+
+    private fun fetchExpectedSha256(checksumUrl: String): String? {
+        val connection = openHttpsFollowingRedirects(checksumUrl)
+        return try {
+            if (connection.responseCode != HttpURLConnection.HTTP_OK) return null
+            // Format written by sha256sum: "<64 hex chars>  <file name>"
+            val text = connection.inputStream.bufferedReader().use { it.readText() }
+            text.trim().split(Regex("\\s+")).firstOrNull()
+                ?.lowercase()
+                ?.takeIf { it.matches(Regex("[0-9a-f]{64}")) }
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    /**
+     * Downloads the release APK and checks it against the published SHA-256.
+     * Returns null (and deletes the file) if anything fails or does not match.
+     */
     suspend fun downloadApk(
-        downloadUrl: String,
+        info: UpdateInfo,
         onProgress: (Int) -> Unit
     ): File? = withContext(Dispatchers.IO) {
+        val targetFile = File(context.cacheDir, "update.apk")
         var connection: HttpURLConnection? = null
         try {
-            val targetFile = File(context.cacheDir, "update.apk")
             if (targetFile.exists()) {
                 targetFile.delete()
             }
 
-            var currentUrl = downloadUrl
-            // Follow redirects (GitHub release downloads redirect to AWS S3)
-            var redirectCount = 0
-            while (redirectCount < 5) {
-                val url = URL(currentUrl)
-                connection = (url.openConnection() as HttpURLConnection).apply {
-                    instanceFollowRedirects = false
-                    connectTimeout = 15000
-                    readTimeout = 15000
-                    setRequestProperty("User-Agent", "MinimalCarLauncher-Android")
-                }
+            val expectedSha256 = fetchExpectedSha256(info.checksumUrl)
+                ?: return@withContext null
 
-                val status = connection.responseCode
-                if (status == HttpURLConnection.HTTP_MOVED_TEMP ||
-                    status == HttpURLConnection.HTTP_MOVED_PERM ||
-                    status == 307 || status == 308) {
-                    currentUrl = connection.getHeaderField("Location")
-                    connection.disconnect()
-                    redirectCount++
-                } else {
-                    break
-                }
+            val activeConnection = openHttpsFollowingRedirects(info.apkDownloadUrl)
+            connection = activeConnection
+            if (activeConnection.responseCode != HttpURLConnection.HTTP_OK) {
+                return@withContext null
             }
-
-            val activeConnection = connection ?: return@withContext null
             val fileLength = activeConnection.contentLength
-            val input = BufferedInputStream(activeConnection.inputStream)
-            val output = FileOutputStream(targetFile)
+            val digest = MessageDigest.getInstance("SHA-256")
 
-            val data = ByteArray(8192)
-            var total: Long = 0
-            var count: Int
-
-            while (input.read(data).also { count = it } != -1) {
-                total += count
-                output.write(data, 0, count)
-                if (fileLength > 0) {
-                    val progress = ((total * 100) / fileLength).toInt()
-                    withContext(Dispatchers.Main) {
-                        onProgress(progress)
+            BufferedInputStream(activeConnection.inputStream).use { input ->
+                FileOutputStream(targetFile).use { output ->
+                    val data = ByteArray(8192)
+                    var total: Long = 0
+                    var count: Int
+                    while (input.read(data).also { count = it } != -1) {
+                        total += count
+                        output.write(data, 0, count)
+                        digest.update(data, 0, count)
+                        if (fileLength > 0) {
+                            val progress = ((total * 100) / fileLength).toInt()
+                            withContext(Dispatchers.Main) {
+                                onProgress(progress)
+                            }
+                        }
                     }
+                    output.flush()
                 }
             }
 
-            output.flush()
-            output.close()
-            input.close()
+            val actualSha256 = digest.digest().joinToString("") { "%02x".format(it) }
+            if (actualSha256 != expectedSha256) {
+                targetFile.delete()
+                return@withContext null
+            }
             targetFile
         } catch (e: Exception) {
             e.printStackTrace()
+            targetFile.delete()
             null
         } finally {
             connection?.disconnect()
         }
     }
 
-    fun promptInstall(apkFile: File) {
+    /**
+     * Opens the system installer. If this app is not yet allowed to install
+     * apps, opens that permission screen instead and returns false; the user
+     * then taps Install again.
+     */
+    fun promptInstall(apkFile: File): Boolean {
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 if (!context.packageManager.canRequestPackageInstalls()) {
@@ -221,6 +277,7 @@ class UpdateManager(private val context: Context) {
                         addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     }
                     context.startActivity(permissionIntent)
+                    return false
                 }
             }
 
@@ -236,8 +293,10 @@ class UpdateManager(private val context: Context) {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
             context.startActivity(installIntent)
+            return true
         } catch (e: Exception) {
             e.printStackTrace()
+            return false
         }
     }
 }

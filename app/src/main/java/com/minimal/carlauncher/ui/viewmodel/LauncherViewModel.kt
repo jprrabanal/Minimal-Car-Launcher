@@ -458,17 +458,20 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         val info = _updateInfo.value ?: return
         viewModelScope.launch {
             _updateDownloadProgress.value = 0
-            val downloadedFile = updateManager.downloadApk(info.apkDownloadUrl) { progress ->
+            val downloadedFile = updateManager.downloadApk(info) { progress ->
                 _updateDownloadProgress.value = progress
             }
 
             if (downloadedFile != null && downloadedFile.exists()) {
                 _updateDownloadProgress.value = null
-                _isAboutDialogOpen.value = false
-                updateManager.promptInstall(downloadedFile)
+                if (updateManager.promptInstall(downloadedFile)) {
+                    _isAboutDialogOpen.value = false
+                } else {
+                    Toast.makeText(getApplication(), "Allow installing apps for Car Launcher, then tap Install again.", Toast.LENGTH_LONG).show()
+                }
             } else {
                 _updateDownloadProgress.value = null
-                Toast.makeText(getApplication(), "Download failed. Please check internet connection.", Toast.LENGTH_LONG).show()
+                Toast.makeText(getApplication(), "Download failed or could not be verified. Please try again.", Toast.LENGTH_LONG).show()
             }
         }
     }
