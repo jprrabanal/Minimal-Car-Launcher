@@ -24,7 +24,7 @@ A lightweight, distraction-free, and high-contrast Android Home Launcher designe
 - **Direct In-App GitHub Updater**:
   - Tap the update icon on the bottom dock to fetch new releases directly from this GitHub repository.
   - Downloads the latest APK with real-time progress and triggers the Android system installer.
-- **Zero Local Installs Needed**: Automated GitHub Actions CI workflow compiles `app-debug.apk` and publishes releases in the cloud.
+- **Zero Local Installs Needed**: Automated GitHub Actions CI workflow compiles a signed `app-release.apk` and publishes releases in the cloud.
 
 ---
 
@@ -34,16 +34,31 @@ Whenever you push to `main`, GitHub Actions automatically compiles the APK and c
 
 1. Go to your repository on GitHub: `https://github.com/jprrabanal/Minimal-Car-Launcher`
 2. Click on **"Releases"** (on the right sidebar) or the **"Actions"** tab.
-3. Download `app-debug.apk` from the latest release.
+3. Download `app-release.apk` from the latest release.
+
+### Release signing (one-time setup)
+
+The release signing key is private and is **not** stored in this repository. Add these four secrets in **Settings → Secrets and variables → Actions → New repository secret**:
+
+| Secret name | Value |
+|---|---|
+| `SIGNING_KEYSTORE_BASE64` | The keystore file (`.p12`), encoded as Base64 |
+| `SIGNING_STORE_PASSWORD` | The keystore password |
+| `SIGNING_KEY_ALIAS` | `carlauncher` |
+| `SIGNING_KEY_PASSWORD` | The key password (same as the keystore password) |
+
+Keep a private backup of the keystore file and its password. If you lose them, installed copies of the app can no longer be updated.
+
+Each release also contains `app-release.apk.sha256`. The in-app updater checks the downloaded APK against it and refuses to install a file that does not match.
 
 ---
 
 ## How to Install on Your Head Unit or Phone
 
 1. **Copy to USB**:
-   - Copy `app-debug.apk` onto a USB flash drive (or download it directly on your phone).
+   - Copy `app-release.apk` onto a USB flash drive (or download it directly on your phone).
 2. **Install**:
-   - Open your head unit's **File Manager** (or phone Files app) and tap `app-debug.apk` to install.
+   - Open your head unit's **File Manager** (or phone Files app) and tap `app-release.apk` to install.
 3. **Set as Default Launcher (on Car)**:
    - Press the physical or on-screen **Home** button on your car unit.
    - Select **Car Launcher** and tap **"Always"**.
