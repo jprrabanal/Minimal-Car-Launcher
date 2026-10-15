@@ -97,6 +97,20 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val _currentDate = MutableStateFlow("")
     val currentDate: StateFlow<String> = _currentDate.asStateFlow()
 
+    // Minimal home screen clock: 12-hour time without seconds, e.g. "9:41" + "PM"
+    // and a full date, e.g. "Monday, Aug. 21, 2026"
+    private val _minimalTime = MutableStateFlow("")
+    val minimalTime: StateFlow<String> = _minimalTime.asStateFlow()
+
+    private val _minimalAmPm = MutableStateFlow("")
+    val minimalAmPm: StateFlow<String> = _minimalAmPm.asStateFlow()
+
+    private val _minimalDate = MutableStateFlow("")
+    val minimalDate: StateFlow<String> = _minimalDate.asStateFlow()
+
+    private val _isMinimalLayout = MutableStateFlow(repository.isMinimalLayout())
+    val isMinimalLayout: StateFlow<Boolean> = _isMinimalLayout.asStateFlow()
+
     // Long press action dialog states
     private val _selectedDockAppForAction = MutableStateFlow<AppInfo?>(null)
     val selectedDockAppForAction: StateFlow<AppInfo?> = _selectedDockAppForAction.asStateFlow()
@@ -209,12 +223,17 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
             val secondsFormat = SimpleDateFormat("ss", Locale.getDefault())
             val dateFormat = SimpleDateFormat("EEEE, MMMM d", Locale.getDefault())
+            val minimalTimeFormat = SimpleDateFormat("h:mm", Locale.getDefault())
+            val amPmFormat = SimpleDateFormat("a", Locale.getDefault())
 
             while (isActive) {
                 val now = Date()
                 _currentTime.value = timeFormat.format(now)
                 _currentSeconds.value = secondsFormat.format(now)
                 _currentDate.value = dateFormat.format(now)
+                _minimalTime.value = minimalTimeFormat.format(now)
+                _minimalAmPm.value = amPmFormat.format(now).uppercase(Locale.getDefault())
+                _minimalDate.value = formatMinimalDate(now)
                 delay(1000L)
             }
         }
@@ -604,6 +623,12 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         speedometer.toggleUnit()
     }
 
+    fun toggleMinimalLayout() {
+        val next = !_isMinimalLayout.value
+        _isMinimalLayout.value = next
+        repository.setMinimalLayout(next)
+    }
+
     fun toggleDarkMode() {
         val next = !_isDarkMode.value
         _isDarkMode.value = next
@@ -652,5 +677,15 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     companion object {
         private const val AUTOSTART_DELAY_MS = 4000L
         private const val AUTOSTART_HEARTBEAT_MS = 60_000L
+
+        /** Formats a date like "Monday, Aug. 21, 2026" ("May" has no dot, as it is not shortened). */
+        fun formatMinimalDate(date: Date, locale: Locale = Locale.getDefault()): String {
+            val dayName = SimpleDateFormat("EEEE", locale).format(date)
+            val shortMonth = SimpleDateFormat("MMM", locale).format(date).trimEnd('.')
+            val fullMonth = SimpleDateFormat("MMMM", locale).format(date)
+            val month = if (shortMonth == fullMonth) shortMonth else "$shortMonth."
+            val dayAndYear = SimpleDateFormat("d, yyyy", locale).format(date)
+            return "$dayName, $month $dayAndYear"
+        }
     }
 }

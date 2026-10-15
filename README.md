@@ -13,6 +13,10 @@ A lightweight, distraction-free, and high-contrast Android Home Launcher designe
 - **Customizable Bottom Dock**:
   - **Long-Press Any Icon**: Choose to **Remove** it or **Replace** it with another installed app.
   - Pinned apps are automatically saved across reboots and power cycles.
+- **Two Home Screen Styles** (switch in **About → Home Screen Style**):
+  - **Dashboard**: live map, compass, speedometer, radio and quick-launch tiles.
+  - **Minimal**: a large 12-hour clock with the date (for example *Friday, Aug. 21, 2026*) in the center, and one centered bottom bar with All Apps, **Android Auto**, your pinned apps and About.
+  - Scales to common head-unit screens: 1024x600, 1280x720, 1280x800 and 2000x1200.
 - **Autostart App on Boot**:
   - Choose any installed app (for example ZLink, music, or your dashcam) to open automatically when the car starts.
   - Open **About** on the dock, tap the **Autostart App** row to pick the app, and use the switch to turn it on or off.

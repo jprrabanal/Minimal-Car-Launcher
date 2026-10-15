@@ -33,6 +33,7 @@ class AppRepository(private val context: Context) {
         private const val KEY_AUTOSTART_LAST_BOOT_COUNT = "key_autostart_last_boot_count"
         private const val KEY_MAP_DARK_MODE = "key_map_dark_mode"
         private const val KEY_DARK_MODE = "key_dark_mode"
+        private const val KEY_MINIMAL_LAYOUT = "key_minimal_layout"
         const val MAX_DOCK_APPS = 6
     }
 
@@ -318,6 +319,12 @@ class AppRepository(private val context: Context) {
         } catch (e: Exception) {
             -1
         }
+    }
+
+    fun isMinimalLayout(): Boolean = prefs.getBoolean(KEY_MINIMAL_LAYOUT, false)
+
+    fun setMinimalLayout(isMinimal: Boolean) {
+        prefs.edit().putBoolean(KEY_MINIMAL_LAYOUT, isMinimal).apply()
     }
 
     fun isDarkMode(): Boolean = prefs.getBoolean(KEY_DARK_MODE, false)

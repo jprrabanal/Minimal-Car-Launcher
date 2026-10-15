@@ -106,57 +106,82 @@ fun LeftBottomDock(
             verticalAlignment = Alignment.CenterVertically
         ) {
             pinnedApps.forEach { app ->
-                val imageBitmap = BitmapHelper.safeDrawableToImageBitmap(app.icon, 72, 72)
-                Box(
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(CircleShape)
-                        .background(CarSurfaceVariant.copy(alpha = 0.8f))
-                        .border(1.dp, CarBorder.copy(alpha = 0.45f), CircleShape)
-                        .combinedClickable(
-                            onClick = { onLaunchApp(app) },
-                            onLongClick = { onLongClickApp(app) }
-                        )
-                        .padding(6.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (imageBitmap != null) {
-                        Image(
-                            bitmap = imageBitmap,
-                            contentDescription = app.label,
-                            modifier = Modifier.size(38.dp)
-                        )
-                    } else {
-                        Text(
-                            text = app.label.take(1).uppercase(),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = AccentCyan
-                        )
-                    }
-                }
+                DockAppIcon(
+                    app = app,
+                    onClick = { onLaunchApp(app) },
+                    onLongClick = { onLongClickApp(app) }
+                )
             }
 
             // Add (+) Button to open app list and pin apps to bar
             if (pinnedApps.size < com.minimal.carlauncher.data.AppRepository.MAX_DOCK_APPS) {
-                Box(
-                    modifier = Modifier
-                        .size(52.dp)
-                        .clip(CircleShape)
-                        .background(CarSurfaceVariant.copy(alpha = 0.8f))
-                        .border(1.dp, AccentCyan.copy(alpha = 0.45f), CircleShape)
-                        .clickable { onAddApp() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add App to Bar",
-                        tint = AccentCyan,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+                DockAddButton(onClick = onAddApp)
             }
         }
+    }
+}
+
+/** Round pinned-app icon used by the bottom docks. Long-press opens Remove / Replace. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun DockAppIcon(
+    app: AppInfo,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val imageBitmap = BitmapHelper.safeDrawableToImageBitmap(app.icon, 72, 72)
+    Box(
+        modifier = modifier
+            .size(52.dp)
+            .clip(CircleShape)
+            .background(CarSurfaceVariant.copy(alpha = 0.8f))
+            .border(1.dp, CarBorder.copy(alpha = 0.45f), CircleShape)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
+            .padding(6.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        if (imageBitmap != null) {
+            Image(
+                bitmap = imageBitmap,
+                contentDescription = app.label,
+                modifier = Modifier.size(38.dp)
+            )
+        } else {
+            Text(
+                text = app.label.take(1).uppercase(),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = AccentCyan
+            )
+        }
+    }
+}
+
+/** Round (+) button that opens the app picker to pin an app to the dock. */
+@Composable
+fun DockAddButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(52.dp)
+            .clip(CircleShape)
+            .background(CarSurfaceVariant.copy(alpha = 0.8f))
+            .border(1.dp, AccentCyan.copy(alpha = 0.45f), CircleShape)
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = "Add App to Bar",
+            tint = AccentCyan,
+            modifier = Modifier.size(24.dp)
+        )
     }
 }
 

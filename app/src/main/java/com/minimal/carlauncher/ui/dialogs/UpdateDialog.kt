@@ -23,9 +23,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
@@ -76,6 +78,8 @@ fun AboutDialog(
     onDismiss: () -> Unit,
     isDarkMode: Boolean = false,
     onToggleDarkMode: () -> Unit = {},
+    isMinimalLayout: Boolean = false,
+    onToggleMinimalLayout: () -> Unit = {},
     isAutoStartEnabled: Boolean = false,
     autoStartAppLabel: String? = null,
     onAutoStartEnabledChange: (Boolean) -> Unit = {},
@@ -595,7 +599,73 @@ fun AboutDialog(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // 5. Autostart App Setting (open an app once after each boot)
+                    // 5. Home Screen Style Setting (Dashboard or Minimal clock)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(CarSurfaceVariant)
+                            .border(1.dp, CarBorder, RoundedCornerShape(12.dp))
+                            .clickable { onToggleMinimalLayout() }
+                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(AccentCyan.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = if (isMinimalLayout) Icons.Default.AccessTime else Icons.Default.Dashboard,
+                                        contentDescription = null,
+                                        tint = AccentCyan,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Column {
+                                    Text(
+                                        text = "Home Screen Style",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextPrimary
+                                    )
+                                    Text(
+                                        text = if (isMinimalLayout) "Minimal (clock, date and app bar)" else "Dashboard (map, radio and tiles)",
+                                        fontSize = 11.sp,
+                                        color = TextSecondary
+                                    )
+                                }
+                            }
+
+                            OutlinedButton(
+                                onClick = onToggleMinimalLayout,
+                                shape = RoundedCornerShape(10.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Text(
+                                    text = if (isMinimalLayout) "Use Dashboard" else "Use Minimal",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = AccentCyan
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // 6. Autostart App Setting (open an app once after each boot)
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -664,7 +734,7 @@ fun AboutDialog(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // 6. Dialog Footer with Close Button
+                    // 7. Dialog Footer with Close Button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End
