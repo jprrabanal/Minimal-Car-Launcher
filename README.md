@@ -14,8 +14,8 @@ A lightweight, distraction-free, and high-contrast Android Home Launcher designe
   - **Long-Press Any Icon**: Choose to **Remove** it or **Replace** it with another installed app.
   - Pinned apps are automatically saved across reboots and power cycles.
 - **Two Home Screen Styles** (switch in **About → Home Screen Style**):
+  - **Minimal** (default): a large 12-hour clock with the date (for example *Friday, Aug. 21, 2026*) in the center, and one centered bottom bar with All Apps, **Android Auto**, your pinned apps and About.
   - **Dashboard**: live map, compass, speedometer, radio and quick-launch tiles.
-  - **Minimal**: a large 12-hour clock with the date (for example *Friday, Aug. 21, 2026*) in the center, and one centered bottom bar with All Apps, **Android Auto**, your pinned apps and About.
   - Minimal always uses a soft dark theme (no pure black or pure white). Pick from 6 colors in **About → Minimal Colors**: Slate, Midnight Blue, Graphite, Forest, Plum and Mocha.
   - Scales to common head-unit screens: 1024x600, 1280x720, 1280x800 and 2000x1200.
 - **Autostart App on Boot**:

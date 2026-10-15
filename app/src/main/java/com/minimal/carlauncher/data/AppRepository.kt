@@ -322,7 +322,7 @@ class AppRepository(private val context: Context) {
         }
     }
 
-    fun isMinimalLayout(): Boolean = prefs.getBoolean(KEY_MINIMAL_LAYOUT, false)
+    fun isMinimalLayout(): Boolean = prefs.getBoolean(KEY_MINIMAL_LAYOUT, true)
 
     fun setMinimalLayout(isMinimal: Boolean) {
         prefs.edit().putBoolean(KEY_MINIMAL_LAYOUT, isMinimal).apply()
