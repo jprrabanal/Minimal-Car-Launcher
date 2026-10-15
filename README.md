@@ -32,7 +32,7 @@ A lightweight, distraction-free, and high-contrast Android Home Launcher designe
 
 Whenever you push to `main`, GitHub Actions automatically compiles the APK and creates a new GitHub Release:
 
-1. Go to your repository on GitHub: `https://github.com/Breakeridis/Minimal-Car-Launcher`
+1. Go to your repository on GitHub: `https://github.com/jprrabanal/Minimal-Car-Launcher`
 2. Click on **"Releases"** (on the right sidebar) or the **"Actions"** tab.
 3. Download `app-debug.apk` from the latest release.
 
