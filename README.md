@@ -1,6 +1,6 @@
 # Minimal Android Car Launcher (1080p + ZLink)
 
-A lightweight, distraction-free, and high-contrast Android Home Launcher designed specifically for **1080p landscape built-in Android head units** with dedicated **ZLink (Android Auto / CarPlay)** integration, **customizable bottom dock**, and an **in-app GitHub updater**.
+A lightweight, distraction-free, and high-contrast Android Home Launcher designed specifically for **1080p landscape built-in Android head units** with dedicated **ZLink (Android Auto / CarPlay)** integration, **customizable bottom dock**, **autostart app on boot**, and an **in-app GitHub updater**.
 
 ---
 
@@ -13,6 +13,11 @@ A lightweight, distraction-free, and high-contrast Android Home Launcher designe
 - **Customizable Bottom Dock**:
   - **Long-Press Any Icon**: Choose to **Remove** it or **Replace** it with another installed app.
   - Pinned apps are automatically saved across reboots and power cycles.
+- **Autostart App on Boot**:
+  - Choose any installed app (for example ZLink, music, or your dashcam) to open automatically when the car starts.
+  - Open **About** on the dock, tap the **Autostart App** row to pick the app, and use the switch to turn it on or off.
+  - The app opens a few seconds after the head unit boots, and only **once per boot**. It does not reopen when you press Home or when the launcher restarts during a drive.
+  - Note: head units that only "sleep" when the car is turned off (instead of fully shutting down) will not reopen the app until the next full reboot.
 - **All Apps Drawer with Pinning**:
   - Open All Apps and **long-press any app** to quickly pin it to the bottom bar.
   - 6-column grid with instant search filtering.
