@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.Button
@@ -38,6 +39,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -72,7 +75,11 @@ fun AboutDialog(
     onInstall: () -> Unit,
     onDismiss: () -> Unit,
     isDarkMode: Boolean = false,
-    onToggleDarkMode: () -> Unit = {}
+    onToggleDarkMode: () -> Unit = {},
+    isAutoStartEnabled: Boolean = false,
+    autoStartAppLabel: String? = null,
+    onAutoStartEnabledChange: (Boolean) -> Unit = {},
+    onChooseAutoStartApp: () -> Unit = {}
 ) {
     if (!isOpen) return
 
@@ -586,9 +593,78 @@ fun AboutDialog(
                         }
                     }
 
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // 5. Autostart App Setting (open an app once after each boot)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(CarSurfaceVariant)
+                            .border(1.dp, CarBorder, RoundedCornerShape(12.dp))
+                            .clickable { onChooseAutoStartApp() }
+                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            if (isAutoStartEnabled) AccentGreen.copy(alpha = 0.15f)
+                                            else TextMuted.copy(alpha = 0.15f)
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.PlayCircle,
+                                        contentDescription = null,
+                                        tint = if (isAutoStartEnabled) AccentGreen else TextMuted,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Column {
+                                    Text(
+                                        text = "Autostart App",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextPrimary
+                                    )
+                                    Text(
+                                        text = when {
+                                            autoStartAppLabel == null -> "Tap to choose an app to open on startup"
+                                            isAutoStartEnabled -> "Opens $autoStartAppLabel when the car starts"
+                                            else -> "$autoStartAppLabel (off)"
+                                        },
+                                        fontSize = 11.sp,
+                                        color = TextSecondary
+                                    )
+                                }
+                            }
+
+                            Switch(
+                                checked = isAutoStartEnabled,
+                                onCheckedChange = onAutoStartEnabledChange,
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = AccentGreen
+                                )
+                            )
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // 5. Dialog Footer with Close Button
+                    // 6. Dialog Footer with Close Button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End

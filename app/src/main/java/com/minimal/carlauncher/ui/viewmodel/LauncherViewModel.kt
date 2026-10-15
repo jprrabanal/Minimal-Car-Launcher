@@ -74,7 +74,15 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     val isDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
     val isMapDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
 
-    private var hasAutoStartedDvr = false
+    // Autostart App (opened once after each head unit boot)
+    private val _isAutoStartEnabled = MutableStateFlow(repository.isAutoStartEnabled())
+    val isAutoStartEnabled: StateFlow<Boolean> = _isAutoStartEnabled.asStateFlow()
+
+    private val _autoStartApp = MutableStateFlow<AppInfo?>(null)
+    val autoStartApp: StateFlow<AppInfo?> = _autoStartApp.asStateFlow()
+
+    private val _isAutoStartPickerOpen = MutableStateFlow(false)
+    val isAutoStartPickerOpen: StateFlow<Boolean> = _isAutoStartPickerOpen.asStateFlow()
 
     private val _isAppDrawerOpen = MutableStateFlow(false)
     val isAppDrawerOpen: StateFlow<Boolean> = _isAppDrawerOpen.asStateFlow()
@@ -154,6 +162,25 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         loadApps()
         startClockTicker()
         radioManager.startMonitoring()
+        runAutoStartIfNeeded()
+    }
+
+    private fun runAutoStartIfNeeded() {
+        val pkg = repository.getAutoStartPackage()
+        if (repository.isAutoStartEnabled() && pkg != null && repository.consumeAutoStartForThisBoot()) {
+            viewModelScope.launch {
+                // Give the head unit a few seconds to finish booting before opening the app
+                delay(AUTOSTART_DELAY_MS)
+                repository.launchPackage(pkg)
+            }
+        }
+        // Keep the stored uptime fresh, used by the boot check on head units without a boot counter
+        viewModelScope.launch {
+            while (isActive) {
+                delay(AUTOSTART_HEARTBEAT_MS)
+                if (_isAutoStartEnabled.value) repository.markAutoStartHandledForThisBoot()
+            }
+        }
     }
 
     fun loadApps() {
@@ -171,7 +198,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             _navigationApp.value = nav
             _musicApp.value = music
             _dvrApp.value = dvr
-            hasAutoStartedDvr = true
+            _autoStartApp.value = repository.getAutoStartPackage()?.let { pkg ->
+                apps.firstOrNull { it.packageName == pkg }
+            }
         }
     }
 
@@ -330,6 +359,38 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         _dvrApp.value = app
         _isDvrPickerOpen.value = false
         Toast.makeText(getApplication(), "Dashcam set to ${app.label}", Toast.LENGTH_SHORT).show()
+    }
+
+    // --- Autostart App ---
+
+    fun setAutoStartEnabled(enabled: Boolean) {
+        if (enabled && repository.getAutoStartPackage() == null) {
+            // No app chosen yet: ask the user to pick one first
+            _isAutoStartPickerOpen.value = true
+            return
+        }
+        // Mark the current boot as handled so turning it on does not open the app mid-drive
+        repository.markAutoStartHandledForThisBoot()
+        repository.setAutoStartEnabled(enabled)
+        _isAutoStartEnabled.value = enabled
+    }
+
+    fun openAutoStartPicker() {
+        _isAutoStartPickerOpen.value = true
+    }
+
+    fun closeAutoStartPicker() {
+        _isAutoStartPickerOpen.value = false
+    }
+
+    fun selectAutoStartApp(app: AppInfo) {
+        repository.setAutoStartPackage(app.packageName)
+        repository.markAutoStartHandledForThisBoot()
+        repository.setAutoStartEnabled(true)
+        _autoStartApp.value = app
+        _isAutoStartEnabled.value = true
+        _isAutoStartPickerOpen.value = false
+        Toast.makeText(getApplication(), "${app.label} will open when the car starts", Toast.LENGTH_SHORT).show()
     }
 
     // --- About & In-App GitHub Updater ---
@@ -583,5 +644,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         super.onCleared()
         speedometer.stopTracking()
         radioManager.stopMonitoring()
+    }
+
+    companion object {
+        private const val AUTOSTART_DELAY_MS = 4000L
+        private const val AUTOSTART_HEARTBEAT_MS = 60_000L
     }
 }

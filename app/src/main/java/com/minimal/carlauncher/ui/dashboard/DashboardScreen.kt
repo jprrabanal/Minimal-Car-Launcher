@@ -67,6 +67,9 @@ fun DashboardScreen(
     val isNavPickerOpen by viewModel.isNavPickerOpen.collectAsState()
     val isMusicPickerOpen by viewModel.isMusicPickerOpen.collectAsState()
     val isDvrPickerOpen by viewModel.isDvrPickerOpen.collectAsState()
+    val isAutoStartPickerOpen by viewModel.isAutoStartPickerOpen.collectAsState()
+    val isAutoStartEnabled by viewModel.isAutoStartEnabled.collectAsState()
+    val autoStartApp by viewModel.autoStartApp.collectAsState()
 
     val currentVersion = viewModel.currentVersion
     val isAboutDialogOpen by viewModel.isAboutDialogOpen.collectAsState()
@@ -256,6 +259,15 @@ fun DashboardScreen(
             onDismiss = { viewModel.closeDvrPicker() }
         )
 
+        // Autostart App Picker Dialog (from the About & Settings dialog)
+        AppPickerDialog(
+            isOpen = isAutoStartPickerOpen,
+            apps = allApps,
+            title = "Select App to Open on Startup",
+            onAppSelected = { app -> viewModel.selectAutoStartApp(app) },
+            onDismiss = { viewModel.closeAutoStartPicker() }
+        )
+
         // Drawer Long-Press Action Dialog (Add to Bottom Bar)
         DrawerActionDialog(
             app = selectedDrawerApp,
@@ -274,7 +286,11 @@ fun DashboardScreen(
             onInstall = { viewModel.startDownloadAndInstall() },
             onDismiss = { viewModel.dismissAboutDialog() },
             isDarkMode = isDarkMode,
-            onToggleDarkMode = { viewModel.toggleDarkMode() }
+            onToggleDarkMode = { viewModel.toggleDarkMode() },
+            isAutoStartEnabled = isAutoStartEnabled,
+            autoStartAppLabel = autoStartApp?.label,
+            onAutoStartEnabledChange = { enabled -> viewModel.setAutoStartEnabled(enabled) },
+            onChooseAutoStartApp = { viewModel.openAutoStartPicker() }
         )
 
         // System & Radio Diagnostics Dialog (Long-press Settings)
