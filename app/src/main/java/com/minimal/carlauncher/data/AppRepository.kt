@@ -8,6 +8,8 @@ import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
 import android.net.Uri
 import android.os.Build
+import android.os.SystemClock
+import android.provider.Settings
 import android.widget.Toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -25,7 +27,10 @@ class AppRepository(private val context: Context) {
         private const val KEY_CUSTOM_NAV_PACKAGE = "key_custom_nav_package"
         private const val KEY_CUSTOM_MUSIC_PACKAGE = "key_custom_music_package"
         private const val KEY_CUSTOM_DVR_PACKAGE = "key_custom_dvr_package"
-        private const val KEY_DVR_AUTOSTART_ENABLED = "key_dvr_autostart_enabled"
+        private const val KEY_AUTOSTART_ENABLED = "key_autostart_enabled"
+        private const val KEY_AUTOSTART_PACKAGE = "key_autostart_package"
+        private const val KEY_AUTOSTART_LAST_ELAPSED = "key_autostart_last_elapsed"
+        private const val KEY_AUTOSTART_LAST_BOOT_COUNT = "key_autostart_last_boot_count"
         private const val KEY_MAP_DARK_MODE = "key_map_dark_mode"
         private const val KEY_DARK_MODE = "key_dark_mode"
         const val MAX_DOCK_APPS = 6
@@ -266,10 +271,53 @@ class AppRepository(private val context: Context) {
         prefs.edit().putString(KEY_CUSTOM_DVR_PACKAGE, packageName).apply()
     }
 
-    fun isDvrAutoStartEnabled(): Boolean = prefs.getBoolean(KEY_DVR_AUTOSTART_ENABLED, false)
+    fun isAutoStartEnabled(): Boolean = prefs.getBoolean(KEY_AUTOSTART_ENABLED, false)
 
-    fun setDvrAutoStartEnabled(enabled: Boolean) {
-        prefs.edit().putBoolean(KEY_DVR_AUTOSTART_ENABLED, enabled).apply()
+    fun setAutoStartEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_AUTOSTART_ENABLED, enabled).apply()
+    }
+
+    fun getAutoStartPackage(): String? = prefs.getString(KEY_AUTOSTART_PACKAGE, null)
+
+    fun setAutoStartPackage(packageName: String) {
+        prefs.edit().putString(KEY_AUTOSTART_PACKAGE, packageName).apply()
+    }
+
+    /**
+     * Returns true only the first time it is called after a device boot.
+     * Uses the system boot counter when the head unit provides it. Otherwise it
+     * falls back to elapsedRealtime (time since boot), which resets on every boot
+     * and is not affected by GPS / network wall-clock changes.
+     * If the launcher process restarts mid-drive, this returns false, so the
+     * autostart app is not opened again.
+     */
+    fun consumeAutoStartForThisBoot(): Boolean {
+        val bootCount = readBootCount()
+        val lastBootCount = prefs.getInt(KEY_AUTOSTART_LAST_BOOT_COUNT, -1)
+        val lastElapsed = prefs.getLong(KEY_AUTOSTART_LAST_ELAPSED, -1L)
+        val isNewBoot = if (bootCount >= 0 && lastBootCount >= 0) {
+            bootCount != lastBootCount
+        } else {
+            lastElapsed < 0L || SystemClock.elapsedRealtime() < lastElapsed
+        }
+        markAutoStartHandledForThisBoot()
+        return isNewBoot
+    }
+
+    /** Records the current boot as handled. Also called periodically to keep the uptime fallback fresh. */
+    fun markAutoStartHandledForThisBoot() {
+        prefs.edit()
+            .putInt(KEY_AUTOSTART_LAST_BOOT_COUNT, readBootCount())
+            .putLong(KEY_AUTOSTART_LAST_ELAPSED, SystemClock.elapsedRealtime())
+            .apply()
+    }
+
+    private fun readBootCount(): Int {
+        return try {
+            Settings.Global.getInt(context.contentResolver, Settings.Global.BOOT_COUNT, -1)
+        } catch (e: Exception) {
+            -1
+        }
     }
 
     fun isDarkMode(): Boolean = prefs.getBoolean(KEY_DARK_MODE, false)
