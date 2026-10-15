@@ -9,6 +9,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -206,92 +207,100 @@ fun RightBottomDock(
         )
     )
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(74.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .background(dockGradient)
-            .border(1.dp, CarBorder.copy(alpha = 0.55f), RoundedCornerShape(20.dp))
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // About & Updates Button
+    // On narrow columns (small head units) show icons only, so labels are never cut
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val showLabels = maxWidth >= 240.dp
         Row(
             modifier = Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(14.dp))
-                .background(CarSurfaceVariant.copy(alpha = 0.85f))
-                .border(
-                    1.dp,
-                    if (isUpdateAvailable) AccentCyan.copy(alpha = 0.7f) else CarBorder.copy(alpha = 0.45f),
-                    RoundedCornerShape(14.dp)
-                )
-                .clickable { onOpenAbout() }
-                .padding(horizontal = 10.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.Center,
+                .fillMaxWidth()
+                .height(74.dp)
+                .clip(RoundedCornerShape(20.dp))
+                .background(dockGradient)
+                .border(1.dp, CarBorder.copy(alpha = 0.55f), RoundedCornerShape(20.dp))
+                .padding(horizontal = 10.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box {
-                Icon(
-                    imageVector = Icons.Default.Info,
-                    contentDescription = "About & Updates",
-                    tint = AccentCyan,
-                    modifier = Modifier.size(22.dp)
-                )
-                if (isUpdateAvailable) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(AccentCyan)
-                            .border(1.5.dp, CarSurfaceVariant, CircleShape)
+            // About & Updates Button
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(CarSurfaceVariant.copy(alpha = 0.85f))
+                    .border(
+                        1.dp,
+                        if (isUpdateAvailable) AccentCyan.copy(alpha = 0.7f) else CarBorder.copy(alpha = 0.45f),
+                        RoundedCornerShape(14.dp)
+                    )
+                    .clickable { onOpenAbout() }
+                    .padding(horizontal = 10.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box {
+                    Icon(
+                        imageVector = Icons.Default.Info,
+                        contentDescription = "About & Updates",
+                        tint = AccentCyan,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    if (isUpdateAvailable) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(AccentCyan)
+                                .border(1.5.dp, CarSurfaceVariant, CircleShape)
+                        )
+                    }
+                }
+                if (showLabels) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = if (isUpdateAvailable) "Update" else "About",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isUpdateAvailable) AccentCyan else TextPrimary,
+                        maxLines = 1
                     )
                 }
             }
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = if (isUpdateAvailable) "Update" else "About",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = if (isUpdateAvailable) AccentCyan else TextPrimary,
-                maxLines = 1
-            )
-        }
 
-        Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
-        // System Settings Button
-        Row(
-            modifier = Modifier
-                .weight(1f)
-                .clip(RoundedCornerShape(14.dp))
-                .background(CarSurfaceVariant.copy(alpha = 0.85f))
-                .border(1.dp, CarBorder.copy(alpha = 0.45f), RoundedCornerShape(14.dp))
-                .combinedClickable(
-                    onClick = { onOpenSettings() },
-                    onLongClick = { onLongPressSettings() }
+            // System Settings Button
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(CarSurfaceVariant.copy(alpha = 0.85f))
+                    .border(1.dp, CarBorder.copy(alpha = 0.45f), RoundedCornerShape(14.dp))
+                    .combinedClickable(
+                        onClick = { onOpenSettings() },
+                        onLongClick = { onLongPressSettings() }
+                    )
+                    .padding(horizontal = 10.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "System Settings",
+                    tint = TextSecondary,
+                    modifier = Modifier.size(22.dp)
                 )
-                .padding(horizontal = 10.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Settings,
-                contentDescription = "System Settings",
-                tint = TextSecondary,
-                modifier = Modifier.size(22.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = "Settings",
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = TextSecondary,
-                maxLines = 1
-            )
+                if (showLabels) {
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "Settings",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = TextSecondary,
+                        maxLines = 1
+                    )
+                }
+            }
         }
     }
 }

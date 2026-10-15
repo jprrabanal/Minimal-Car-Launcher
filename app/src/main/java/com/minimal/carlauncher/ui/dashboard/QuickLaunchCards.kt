@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -36,6 +37,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.minimal.carlauncher.data.AppInfo
@@ -249,54 +251,64 @@ fun ActionTile(
         )
     }
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(tileBackground)
-            .border(
-                1.dp,
-                if (isHighlighted) accentColor.copy(alpha = 0.45f) else CarBorder.copy(alpha = 0.5f),
-                RoundedCornerShape(18.dp)
-            )
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick
-            )
-            .padding(horizontal = 18.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
+    // Short tiles (small screens): smaller icon, less padding, no subtitle
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val isCompact = maxHeight < 68.dp
+        Row(
             modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .background(accentColor.copy(alpha = if (isHighlighted) 0.20f else 0.12f))
-                .border(1.dp, accentColor.copy(alpha = if (isHighlighted) 0.45f else 0.22f), CircleShape),
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                .clip(RoundedCornerShape(18.dp))
+                .background(tileBackground)
+                .border(
+                    1.dp,
+                    if (isHighlighted) accentColor.copy(alpha = 0.45f) else CarBorder.copy(alpha = 0.5f),
+                    RoundedCornerShape(18.dp)
+                )
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick = onLongClick
+                )
+                .padding(horizontal = if (isCompact) 12.dp else 18.dp, vertical = if (isCompact) 4.dp else 12.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                tint = accentColor,
-                modifier = Modifier.size(24.dp)
-            )
-        }
+            Box(
+                modifier = Modifier
+                    .size(if (isCompact) 34.dp else 44.dp)
+                    .clip(CircleShape)
+                    .background(accentColor.copy(alpha = if (isHighlighted) 0.20f else 0.12f))
+                    .border(1.dp, accentColor.copy(alpha = if (isHighlighted) 0.45f else 0.22f), CircleShape),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = title,
+                    tint = accentColor,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
 
-        Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(if (isCompact) 10.dp else 16.dp))
 
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = title,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = TextPrimary
-            )
-            Text(
-                text = subtitle,
-                fontSize = if (isHighlighted) 13.sp else 12.sp,
-                fontWeight = if (isHighlighted) FontWeight.Bold else FontWeight.Normal,
-                color = if (isHighlighted) accentColor else TextSecondary
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    fontSize = if (isCompact) 15.sp else 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                if (!isCompact) {
+                    Text(
+                        text = subtitle,
+                        fontSize = if (isHighlighted) 13.sp else 12.sp,
+                        fontWeight = if (isHighlighted) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isHighlighted) accentColor else TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
         }
     }
 }

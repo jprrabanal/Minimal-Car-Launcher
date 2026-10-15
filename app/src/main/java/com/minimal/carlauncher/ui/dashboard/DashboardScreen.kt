@@ -3,15 +3,16 @@ package com.minimal.carlauncher.ui.dashboard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -109,7 +110,10 @@ fun DashboardScreen(
                 onAddApp = { viewModel.openAddDockPicker() },
                 onOpenAbout = { viewModel.openAboutDialog() }
             )
-        } else {
+        } else BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            // Keep the round map at most 45% of the width, so the side columns
+            // still have room on narrow screens such as 1024x600 head units
+            val mapSize = minOf(maxHeight, maxWidth * 0.45f)
             Row(
                 modifier = Modifier.fillMaxSize(),
                 horizontalArrangement = Arrangement.spacedBy(14.dp),
@@ -176,9 +180,7 @@ fun DashboardScreen(
                     onOpenSearch = { viewModel.openAddressSearch() },
                     onOpenNavigation = { viewModel.launchNavigation() },
                     isMapDarkMode = isDarkMode,
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .aspectRatio(1f)
+                    modifier = Modifier.size(mapSize)
                 )
 
                 // Right Column: Quick-Launch Tiles + Right Bottom Dock (About, Settings)

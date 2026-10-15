@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -83,13 +84,18 @@ fun RadioStationWidget(
         Triple("FM TUNER", "", "Tap to launch Radio")
     }
 
-    Box(
+    BoxWithConstraints(
         modifier = modifier
             .clip(RoundedCornerShape(20.dp))
             .background(cardGradient)
             .border(1.dp, CarBorder.copy(alpha = 0.6f), RoundedCornerShape(20.dp))
             .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
+        // On short cards (small head units) drop the preset row first, then the
+        // seek buttons, so nothing is cut off. Tapping the card opens the tuner.
+        val showPresets = maxHeight >= 230.dp
+        val showSeek = maxHeight >= 165.dp
+        val isNarrow = maxWidth < 220.dp
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween,
@@ -116,11 +122,12 @@ fun RadioStationWidget(
                         modifier = Modifier.size(17.dp)
                     )
                     Text(
-                        text = "RADIO TUNER",
+                        text = if (isNarrow) "RADIO" else "RADIO TUNER",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         color = AccentAmber,
-                        letterSpacing = 0.5.sp
+                        letterSpacing = 0.5.sp,
+                        maxLines = 1
                     )
                 }
 
@@ -144,7 +151,9 @@ fun RadioStationWidget(
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = if (hasStation || isRadioActive) AccentGreen else AccentAmber,
-                        letterSpacing = 0.5.sp
+                        letterSpacing = 0.5.sp,
+                        maxLines = 1,
+                        softWrap = false
                     )
                 }
             }
@@ -166,11 +175,13 @@ fun RadioStationWidget(
                     ) {
                         Text(
                             text = freqDisplay,
-                            fontSize = 50.sp,
+                            fontSize = if (isNarrow || !showSeek) 38.sp else 50.sp,
                             fontWeight = FontWeight.Black,
                             color = TextPrimary,
                             letterSpacing = (-0.5).sp,
-                            lineHeight = 50.sp
+                            lineHeight = if (isNarrow || !showSeek) 38.sp else 50.sp,
+                            maxLines = 1,
+                            softWrap = false
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
@@ -196,23 +207,27 @@ fun RadioStationWidget(
                 } else {
                     Text(
                         text = "FM RADIO",
-                        fontSize = 36.sp,
+                        fontSize = if (isNarrow || !showSeek) 26.sp else 36.sp,
                         fontWeight = FontWeight.Black,
                         color = TextPrimary,
-                        letterSpacing = (-0.5).sp
+                        letterSpacing = (-0.5).sp,
+                        maxLines = 1,
+                        softWrap = false
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "Tap to open tuner",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium,
-                        color = TextSecondary
+                        color = TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
             // Quick-Access Saved / Collected Stations Row (Top 4)
-            Row(
+            if (showPresets) Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 2.dp),
@@ -259,7 +274,7 @@ fun RadioStationWidget(
             }
 
             // Bottom Controls: Minus (-) and Plus (+) Station Seek Buttons
-            Row(
+            if (showSeek) Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -267,7 +282,7 @@ fun RadioStationWidget(
                 // Minus / Previous Station Button
                 Box(
                     modifier = Modifier
-                        .size(width = 82.dp, height = 55.dp)
+                        .size(width = if (isNarrow) 64.dp else 82.dp, height = 55.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(CarSurfaceVariant)
                         .border(1.dp, CarBorder, RoundedCornerShape(16.dp))
@@ -283,7 +298,7 @@ fun RadioStationWidget(
                     )
                 }
 
-                Text(
+                if (!isNarrow) Text(
                     text = "SEEK STATION",
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
@@ -294,7 +309,7 @@ fun RadioStationWidget(
                 // Plus / Next Station Button
                 Box(
                     modifier = Modifier
-                        .size(width = 82.dp, height = 55.dp)
+                        .size(width = if (isNarrow) 64.dp else 82.dp, height = 55.dp)
                         .clip(RoundedCornerShape(16.dp))
                         .background(CarSurfaceVariant)
                         .border(1.dp, CarBorder, RoundedCornerShape(16.dp))

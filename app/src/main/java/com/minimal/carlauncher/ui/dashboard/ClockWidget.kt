@@ -3,6 +3,7 @@ package com.minimal.carlauncher.ui.dashboard
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.minimal.carlauncher.ui.theme.AccentCyan
@@ -65,43 +67,57 @@ fun ClockWidget(
         )
     )
 
-    Column(
+    BoxWithConstraints(
         modifier = modifier
             .clip(RoundedCornerShape(20.dp))
             .background(cardGradient)
             .border(1.dp, CarBorder.copy(alpha = 0.5f), RoundedCornerShape(20.dp))
             .padding(horizontal = 18.dp, vertical = 6.dp),
-        verticalArrangement = Arrangement.Center
+        contentAlignment = Alignment.CenterStart
     ) {
-        Row(
-            verticalAlignment = Alignment.Bottom
-        ) {
-            Text(
-                text = if (time.isNotBlank()) time else "--:--",
-                fontSize = 68.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary,
-                letterSpacing = (-1).sp
-            )
+        // Shrink the clock to fit its card: "21:41" + seconds is about 3.2x the
+        // font size wide, and time + date is about 1.6x the font size tall.
+        val timeSize = minOf(maxWidth.value / 3.2f, maxHeight.value / 1.6f).coerceIn(24f, 68f)
+        val secondsSize = timeSize * 0.35f
+        val dateSize = (timeSize * 0.24f).coerceIn(11f, 16f)
 
-            Spacer(modifier = Modifier.width(8.dp))
+        Column(verticalArrangement = Arrangement.Center) {
+            Row(
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Text(
+                    text = if (time.isNotBlank()) time else "--:--",
+                    fontSize = timeSize.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary,
+                    letterSpacing = (-1).sp,
+                    maxLines = 1,
+                    softWrap = false
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Text(
+                    text = if (seconds.isNotBlank()) seconds else "00",
+                    fontSize = secondsSize.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = AccentCyan,
+                    maxLines = 1,
+                    softWrap = false,
+                    modifier = Modifier.padding(bottom = (timeSize * 0.09f).dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(2.dp))
 
             Text(
-                text = if (seconds.isNotBlank()) seconds else "00",
-                fontSize = 24.sp,
+                text = if (date.isNotBlank()) date else "Loading date…",
+                fontSize = dateSize.sp,
                 fontWeight = FontWeight.Medium,
-                color = AccentCyan,
-                modifier = Modifier.padding(bottom = 6.dp)
+                color = TextSecondary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         }
-
-        Spacer(modifier = Modifier.height(2.dp))
-
-        Text(
-            text = if (date.isNotBlank()) date else "Loading date…",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            color = TextSecondary
-        )
     }
 }
