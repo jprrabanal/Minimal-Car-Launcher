@@ -1,9 +1,11 @@
 package com.minimal.carlauncher.ui.dashboard
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +23,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Info
@@ -248,5 +251,69 @@ private fun AndroidAutoButton(
                 modifier = Modifier.size(30.dp)
             )
         }
+    }
+}
+
+/** Round pinned-app icon used by the bottom bar. Long-press opens Remove / Replace. */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun DockAppIcon(
+    app: AppInfo,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val imageBitmap = BitmapHelper.safeDrawableToImageBitmap(app.icon, 72, 72)
+    Box(
+        modifier = modifier
+            .size(52.dp)
+            .clip(CircleShape)
+            .background(CarSurfaceVariant.copy(alpha = 0.8f))
+            .border(1.dp, CarBorder.copy(alpha = 0.45f), CircleShape)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
+            .padding(6.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        if (imageBitmap != null) {
+            Image(
+                bitmap = imageBitmap,
+                contentDescription = app.label,
+                modifier = Modifier.size(38.dp)
+            )
+        } else {
+            Text(
+                text = app.label.take(1).uppercase(),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = AccentCyan
+            )
+        }
+    }
+}
+
+/** Round (+) button that opens the app picker to pin an app to the dock. */
+@Composable
+private fun DockAddButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(52.dp)
+            .clip(CircleShape)
+            .background(CarSurfaceVariant.copy(alpha = 0.8f))
+            .border(1.dp, AccentCyan.copy(alpha = 0.45f), CircleShape)
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Default.Add,
+            contentDescription = "Add App to Bar",
+            tint = AccentCyan,
+            modifier = Modifier.size(24.dp)
+        )
     }
 }
