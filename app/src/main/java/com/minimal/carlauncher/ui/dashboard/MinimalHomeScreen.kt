@@ -32,7 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.minimal.carlauncher.data.AppInfo
@@ -49,7 +48,7 @@ import com.minimal.carlauncher.util.BitmapHelper
 
 /**
  * Minimal home screen: a large 12-hour clock with the date in the center, and one
- * centered bottom bar with All Apps, Android Auto (ZLink), pinned apps and About.
+ * centered bottom bar with All Apps, Android Auto (ZLink, icon only), pinned apps and About.
  */
 @Composable
 fun MinimalHomeScreen(
@@ -219,46 +218,35 @@ private fun RoundIconButton(
     )
 }
 
+/** Android Auto (ZLink): a round icon-only button in the center of the bar. */
 @Composable
 private fun AndroidAutoButton(
     zlinkApp: AppInfo?,
     onClick: () -> Unit
 ) {
-    val iconBitmap = zlinkApp?.let { BitmapHelper.safeDrawableToImageBitmap(it.icon, 72, 72) }
-    Row(
+    val iconBitmap = zlinkApp?.let { BitmapHelper.safeDrawableToImageBitmap(it.icon, 96, 96) }
+    Box(
         modifier = Modifier
-            .height(52.dp)
-            .clip(RoundedCornerShape(26.dp))
+            .size(56.dp)
+            .clip(CircleShape)
             .background(AccentZLink.copy(alpha = 0.15f))
-            .border(1.dp, AccentZLink.copy(alpha = 0.5f), RoundedCornerShape(26.dp))
-            .clickable { onClick() }
-            .padding(start = 8.dp, end = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .border(1.5.dp, AccentZLink.copy(alpha = 0.6f), CircleShape)
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
     ) {
         if (iconBitmap != null) {
             Image(
                 bitmap = iconBitmap,
-                contentDescription = null,
-                modifier = Modifier.size(36.dp)
+                contentDescription = zlinkApp?.label ?: "Android Auto",
+                modifier = Modifier.size(40.dp)
             )
         } else {
             Icon(
                 imageVector = Icons.Default.DirectionsCar,
-                contentDescription = null,
+                contentDescription = "Android Auto",
                 tint = AccentZLink,
-                modifier = Modifier
-                    .padding(start = 4.dp)
-                    .size(28.dp)
+                modifier = Modifier.size(30.dp)
             )
         }
-        Text(
-            text = "Android Auto",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = TextPrimary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
     }
 }

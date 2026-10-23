@@ -82,6 +82,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val _autoStartApp = MutableStateFlow<AppInfo?>(null)
     val autoStartApp: StateFlow<AppInfo?> = _autoStartApp.asStateFlow()
 
+    private val _isStatusBarShown = MutableStateFlow(repository.isStatusBarShown())
+    val isStatusBarShown: StateFlow<Boolean> = _isStatusBarShown.asStateFlow()
+
     private val _isAutoStartPickerOpen = MutableStateFlow(false)
     val isAutoStartPickerOpen: StateFlow<Boolean> = _isAutoStartPickerOpen.asStateFlow()
 
@@ -396,6 +399,24 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         repository.markAutoStartHandledForThisBoot()
         repository.setAutoStartEnabled(enabled)
         _isAutoStartEnabled.value = enabled
+    }
+
+    fun setStatusBarShown(shown: Boolean) {
+        repository.setStatusBarShown(shown)
+        _isStatusBarShown.value = shown
+    }
+
+    /**
+     * Hardware Back on the home screen (open dialogs close themselves first):
+     * close the app drawer if it is open, otherwise go back to the last app
+     * opened from the launcher, like Android Auto or the map.
+     */
+    fun onHomeBack() {
+        if (_isAppDrawerOpen.value) {
+            closeAppDrawer()
+            return
+        }
+        repository.getLastLaunchedPackage()?.let { repository.launchPackage(it) }
     }
 
     fun openAutoStartPicker() {

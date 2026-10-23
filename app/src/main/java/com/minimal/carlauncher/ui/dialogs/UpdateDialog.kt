@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.VerticalAlignTop
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.Button
@@ -87,7 +88,9 @@ fun AboutDialog(
     isAutoStartEnabled: Boolean = false,
     autoStartAppLabel: String? = null,
     onAutoStartEnabledChange: (Boolean) -> Unit = {},
-    onChooseAutoStartApp: () -> Unit = {}
+    onChooseAutoStartApp: () -> Unit = {},
+    isStatusBarShown: Boolean = true,
+    onStatusBarShownChange: (Boolean) -> Unit = {}
 ) {
     if (!isOpen) return
 
@@ -744,9 +747,75 @@ fun AboutDialog(
                         }
                     }
 
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // 7. Show the head unit's top bar (status bar)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(CarSurfaceVariant)
+                            .border(1.dp, CarBorder, RoundedCornerShape(12.dp))
+                            .clickable { onStatusBarShownChange(!isStatusBarShown) }
+                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            if (isStatusBarShown) AccentGreen.copy(alpha = 0.15f)
+                                            else TextMuted.copy(alpha = 0.15f)
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.VerticalAlignTop,
+                                        contentDescription = null,
+                                        tint = if (isStatusBarShown) AccentGreen else TextMuted,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                                Column {
+                                    Text(
+                                        text = "Show Top Bar",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = TextPrimary
+                                    )
+                                    Text(
+                                        text = if (isStatusBarShown) "The head unit's status bar is visible"
+                                        else "Hidden (swipe down from the top to see it)",
+                                        fontSize = 11.sp,
+                                        color = TextSecondary
+                                    )
+                                }
+                            }
+
+                            Switch(
+                                checked = isStatusBarShown,
+                                onCheckedChange = onStatusBarShownChange,
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Color.White,
+                                    checkedTrackColor = AccentGreen
+                                )
+                            )
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // 7. Dialog Footer with Close Button
+                    // 8. Dialog Footer with Close Button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End

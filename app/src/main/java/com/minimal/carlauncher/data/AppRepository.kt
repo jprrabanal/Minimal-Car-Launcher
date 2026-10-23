@@ -35,6 +35,8 @@ class AppRepository(private val context: Context) {
         private const val KEY_DARK_MODE = "key_dark_mode"
         private const val KEY_MINIMAL_LAYOUT = "key_minimal_layout"
         private const val KEY_MINIMAL_PALETTE = "key_minimal_palette"
+        private const val KEY_SHOW_STATUS_BAR = "key_show_status_bar"
+        private const val KEY_LAST_LAUNCHED_PACKAGE = "key_last_launched_package"
         const val MAX_DOCK_APPS = 6
     }
 
@@ -322,6 +324,22 @@ class AppRepository(private val context: Context) {
         }
     }
 
+    /** Show the head unit's top bar (status bar). On by default. */
+    fun isStatusBarShown(): Boolean = prefs.getBoolean(KEY_SHOW_STATUS_BAR, true)
+
+    fun setStatusBarShown(shown: Boolean) {
+        prefs.edit().putBoolean(KEY_SHOW_STATUS_BAR, shown).apply()
+    }
+
+    /** The last app opened from the launcher, so the Back button can return to it. */
+    fun getLastLaunchedPackage(): String? = prefs.getString(KEY_LAST_LAUNCHED_PACKAGE, null)
+
+    private fun rememberLaunched(packageName: String) {
+        if (packageName != context.packageName) {
+            prefs.edit().putString(KEY_LAST_LAUNCHED_PACKAGE, packageName).apply()
+        }
+    }
+
     fun isMinimalLayout(): Boolean = prefs.getBoolean(KEY_MINIMAL_LAYOUT, true)
 
     fun setMinimalLayout(isMinimal: Boolean) {
@@ -416,6 +434,7 @@ class AppRepository(private val context: Context) {
             if (launchIntent != null) {
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(launchIntent)
+                rememberLaunched(packageName)
                 true
             } else {
                 false
@@ -435,6 +454,7 @@ class AppRepository(private val context: Context) {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
                 context.startActivity(intent)
+                rememberLaunched(packageName)
                 true
             } else {
                 launchPackage(packageName)

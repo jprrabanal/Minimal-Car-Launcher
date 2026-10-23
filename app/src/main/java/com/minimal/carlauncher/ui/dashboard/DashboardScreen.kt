@@ -76,6 +76,7 @@ fun DashboardScreen(
     val isAutoStartPickerOpen by viewModel.isAutoStartPickerOpen.collectAsState()
     val isAutoStartEnabled by viewModel.isAutoStartEnabled.collectAsState()
     val autoStartApp by viewModel.autoStartApp.collectAsState()
+    val isStatusBarShown by viewModel.isStatusBarShown.collectAsState()
 
     val currentVersion = viewModel.currentVersion
     val isAboutDialogOpen by viewModel.isAboutDialogOpen.collectAsState()
@@ -318,7 +319,9 @@ fun DashboardScreen(
             isAutoStartEnabled = isAutoStartEnabled,
             autoStartAppLabel = autoStartApp?.label,
             onAutoStartEnabledChange = { enabled -> viewModel.setAutoStartEnabled(enabled) },
-            onChooseAutoStartApp = { viewModel.openAutoStartPicker() }
+            onChooseAutoStartApp = { viewModel.openAutoStartPicker() },
+            isStatusBarShown = isStatusBarShown,
+            onStatusBarShownChange = { shown -> viewModel.setStatusBarShown(shown) }
         )
 
         // System & Radio Diagnostics Dialog (Long-press Settings)
