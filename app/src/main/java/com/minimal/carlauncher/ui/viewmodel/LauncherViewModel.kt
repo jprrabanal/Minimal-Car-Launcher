@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -78,6 +79,20 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     private val _minimalPalette = MutableStateFlow(MinimalPalette.fromName(repository.getMinimalPaletteName()))
     val minimalPalette: StateFlow<MinimalPalette> = _minimalPalette.asStateFlow()
+
+    // Night Dimming: darker colors between two times of day
+    private val _isNightDimEnabled = MutableStateFlow(repository.isNightDimEnabled())
+    val isNightDimEnabled: StateFlow<Boolean> = _isNightDimEnabled.asStateFlow()
+
+    private val _nightDimStartMinute = MutableStateFlow(repository.getNightDimStartMinute())
+    val nightDimStartMinute: StateFlow<Int> = _nightDimStartMinute.asStateFlow()
+
+    private val _nightDimEndMinute = MutableStateFlow(repository.getNightDimEndMinute())
+    val nightDimEndMinute: StateFlow<Int> = _nightDimEndMinute.asStateFlow()
+
+    /** True while the screen should be dimmed right now. */
+    private val _isNightDimmed = MutableStateFlow(false)
+    val isNightDimmed: StateFlow<Boolean> = _isNightDimmed.asStateFlow()
 
     // Long press action dialog states
     private val _selectedDockAppForAction = MutableStateFlow<AppInfo?>(null)
@@ -156,6 +171,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                 _minimalTime.value = minimalTimeFormat.format(now)
                 _minimalAmPm.value = amPmFormat.format(now).uppercase(Locale.getDefault())
                 _minimalDate.value = formatMinimalDate(now)
+                updateNightDim(now)
                 delay(1000L)
             }
         }
@@ -381,6 +397,33 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    // --- Night Dimming ---
+
+    private fun updateNightDim(now: Date = Date()) {
+        val calendar = Calendar.getInstance().apply { time = now }
+        val minuteOfDay = calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE)
+        _isNightDimmed.value = _isNightDimEnabled.value &&
+                isWithinNight(minuteOfDay, _nightDimStartMinute.value, _nightDimEndMinute.value)
+    }
+
+    fun setNightDimEnabled(enabled: Boolean) {
+        repository.setNightDimEnabled(enabled)
+        _isNightDimEnabled.value = enabled
+        updateNightDim()
+    }
+
+    fun setNightDimStart(minuteOfDay: Int) {
+        _nightDimStartMinute.value = minuteOfDay
+        repository.setNightDimTimes(minuteOfDay, _nightDimEndMinute.value)
+        updateNightDim()
+    }
+
+    fun setNightDimEnd(minuteOfDay: Int) {
+        _nightDimEndMinute.value = minuteOfDay
+        repository.setNightDimTimes(_nightDimStartMinute.value, minuteOfDay)
+        updateNightDim()
+    }
+
     fun selectMinimalPalette(palette: MinimalPalette) {
         _minimalPalette.value = palette
         repository.setMinimalPaletteName(palette.name)
@@ -389,6 +432,16 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     companion object {
         private const val AUTOSTART_DELAY_MS = 4000L
         private const val AUTOSTART_HEARTBEAT_MS = 60_000L
+
+        /**
+         * True if [minute] (minutes after midnight) is inside the night period
+         * from [start] to [end]. The period may cross midnight (6 PM to 6 AM).
+         */
+        fun isWithinNight(minute: Int, start: Int, end: Int): Boolean = when {
+            start == end -> false
+            start < end -> minute in start until end
+            else -> minute >= start || minute < end
+        }
 
         /** Formats a date like "Monday, Aug. 21, 2026" ("May" has no dot, as it is not shortened). */
         fun formatMinimalDate(date: Date, locale: Locale = Locale.getDefault()): String {

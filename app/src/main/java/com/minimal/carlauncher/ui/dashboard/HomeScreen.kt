@@ -43,6 +43,9 @@ fun HomeScreen(
     val isAutoStartEnabled by viewModel.isAutoStartEnabled.collectAsState()
     val autoStartApp by viewModel.autoStartApp.collectAsState()
     val isStatusBarShown by viewModel.isStatusBarShown.collectAsState()
+    val isNightDimEnabled by viewModel.isNightDimEnabled.collectAsState()
+    val nightDimStartMinute by viewModel.nightDimStartMinute.collectAsState()
+    val nightDimEndMinute by viewModel.nightDimEndMinute.collectAsState()
 
     val currentVersion = viewModel.currentVersion
     val isAboutDialogOpen by viewModel.isAboutDialogOpen.collectAsState()
@@ -141,7 +144,13 @@ fun HomeScreen(
             onAutoStartEnabledChange = { enabled -> viewModel.setAutoStartEnabled(enabled) },
             onChooseAutoStartApp = { viewModel.openAutoStartPicker() },
             isStatusBarShown = isStatusBarShown,
-            onStatusBarShownChange = { shown -> viewModel.setStatusBarShown(shown) }
+            onStatusBarShownChange = { shown -> viewModel.setStatusBarShown(shown) },
+            isNightDimEnabled = isNightDimEnabled,
+            nightDimStartMinute = nightDimStartMinute,
+            nightDimEndMinute = nightDimEndMinute,
+            onNightDimEnabledChange = { enabled -> viewModel.setNightDimEnabled(enabled) },
+            onNightDimStartChange = { minute -> viewModel.setNightDimStart(minute) },
+            onNightDimEndChange = { minute -> viewModel.setNightDimEnd(minute) }
         )
     }
 }

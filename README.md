@@ -11,6 +11,7 @@ A lightweight, distraction-free, and high-contrast Android Home Launcher designe
   - Scales to common head-unit screens: 1024x600, 1280x720, 1280x800 and 2000x1200.
 - **Android Auto Button**: a round icon in the center of the bar. Auto-detects your head unit's ZLink installation (`com.zjinnova.zlink`, `com.xyauto.zlink`, etc.) and launches Android Auto in one tap.
 - **Hardware Back Button**: closes open windows. On the home screen it takes you back to the last app you opened from the launcher (for example Android Auto).
+- **Night Dimming**: from 6 PM to 6 AM (you can change the times) the whole screen uses darker colors, so it does not glare at night. Turn it on or off in **About → Night Dimming**.
 - **Head Unit Top Bar**: the status bar stays visible and matches the launcher color. Turn it off in **About → Show Top Bar**.
 - **Customizable Bottom Dock**:
   - **Long-Press Any Icon**: Choose to **Remove** it or **Replace** it with another installed app.

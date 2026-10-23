@@ -1,5 +1,6 @@
 package com.minimal.carlauncher.ui.dialogs
 
+import android.app.TimePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DirectionsCar
@@ -45,6 +47,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -80,7 +83,13 @@ fun AboutDialog(
     onAutoStartEnabledChange: (Boolean) -> Unit = {},
     onChooseAutoStartApp: () -> Unit = {},
     isStatusBarShown: Boolean = true,
-    onStatusBarShownChange: (Boolean) -> Unit = {}
+    onStatusBarShownChange: (Boolean) -> Unit = {},
+    isNightDimEnabled: Boolean = true,
+    nightDimStartMinute: Int = 18 * 60,
+    nightDimEndMinute: Int = 6 * 60,
+    onNightDimEnabledChange: (Boolean) -> Unit = {},
+    onNightDimStartChange: (Int) -> Unit = {},
+    onNightDimEndChange: (Int) -> Unit = {}
 ) {
     if (!isOpen) return
 
@@ -598,7 +607,19 @@ fun AboutDialog(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // 6. Show the head unit's top bar (status bar)
+                    // 6. Night Dimming: darker colors at night
+                    NightDimSetting(
+                        enabled = isNightDimEnabled,
+                        startMinute = nightDimStartMinute,
+                        endMinute = nightDimEndMinute,
+                        onEnabledChange = onNightDimEnabledChange,
+                        onStartChange = onNightDimStartChange,
+                        onEndChange = onNightDimEndChange
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // 7. Show the head unit's top bar (status bar)
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -664,7 +685,7 @@ fun AboutDialog(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // 7. Dialog Footer with Close Button
+                    // 8. Dialog Footer with Close Button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End
@@ -677,6 +698,120 @@ fun AboutDialog(
                             Text("Close", color = TextSecondary, fontSize = 12.sp)
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+/** "6:00 PM" style label for a time given in minutes after midnight. */
+private fun formatMinuteOfDay(minute: Int): String {
+    val hour24 = (minute / 60) % 24
+    val hour12 = if (hour24 % 12 == 0) 12 else hour24 % 12
+    val amPm = if (hour24 < 12) "AM" else "PM"
+    return "%d:%02d %s".format(hour12, minute % 60, amPm)
+}
+
+@Composable
+private fun NightDimSetting(
+    enabled: Boolean,
+    startMinute: Int,
+    endMinute: Int,
+    onEnabledChange: (Boolean) -> Unit,
+    onStartChange: (Int) -> Unit,
+    onEndChange: (Int) -> Unit
+) {
+    val context = LocalContext.current
+    fun pickTime(current: Int, onPicked: (Int) -> Unit) {
+        TimePickerDialog(
+            context,
+            { _, hour, minute -> onPicked(hour * 60 + minute) },
+            current / 60,
+            current % 60,
+            false
+        ).show()
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(CarSurfaceVariant)
+            .border(1.dp, CarBorder, RoundedCornerShape(12.dp))
+            .padding(horizontal = 14.dp, vertical = 10.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onEnabledChange(!enabled) },
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (enabled) AccentCyan.copy(alpha = 0.15f)
+                            else TextMuted.copy(alpha = 0.15f)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Bedtime,
+                        contentDescription = null,
+                        tint = if (enabled) AccentCyan else TextMuted,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Column {
+                    Text(
+                        text = "Night Dimming",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    Text(
+                        text = if (enabled) {
+                            "Darker screen from ${formatMinuteOfDay(startMinute)} to ${formatMinuteOfDay(endMinute)}"
+                        } else {
+                            "Off"
+                        },
+                        fontSize = 11.sp,
+                        color = TextSecondary
+                    )
+                }
+            }
+
+            Switch(
+                checked = enabled,
+                onCheckedChange = onEnabledChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = AccentCyan
+                )
+            )
+        }
+
+        if (enabled) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = { pickTime(startMinute, onStartChange) },
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("From ${formatMinuteOfDay(startMinute)}", color = TextPrimary, fontSize = 12.sp)
+                }
+                OutlinedButton(
+                    onClick = { pickTime(endMinute, onEndChange) },
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("To ${formatMinuteOfDay(endMinute)}", color = TextPrimary, fontSize = 12.sp)
                 }
             }
         }

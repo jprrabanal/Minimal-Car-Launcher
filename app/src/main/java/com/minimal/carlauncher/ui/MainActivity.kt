@@ -39,7 +39,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val minimalPalette by viewModel.minimalPalette.collectAsState()
             val isStatusBarShown by viewModel.isStatusBarShown.collectAsState()
-            CarLauncherTheme(palette = minimalPalette) {
+            val isNightDimmed by viewModel.isNightDimmed.collectAsState()
+            CarLauncherTheme(palette = minimalPalette, isNightDimmed = isNightDimmed) {
                 // The top bar blends into the launcher background
                 val barColor = CarBg
                 SideEffect {

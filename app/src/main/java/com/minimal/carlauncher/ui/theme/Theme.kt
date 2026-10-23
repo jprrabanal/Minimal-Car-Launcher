@@ -48,10 +48,11 @@ private fun createColorScheme(colors: CarColors, isDark: Boolean) = if (isDark) 
 @Composable
 fun CarLauncherTheme(
     palette: MinimalPalette = MinimalPalette.DEFAULT,
+    isNightDimmed: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    // The launcher always uses the soft dark Minimal colors
-    val colors = minimalCarColors(palette)
+    // The launcher always uses the soft dark Minimal colors, darker at night
+    val colors = minimalCarColors(palette).let { if (isNightDimmed) it.dimmedForNight() else it }
     val colorScheme = createColorScheme(colors, colors.isDark)
 
     // The launcher uses fixed, screen-filling layouts. A large system font size

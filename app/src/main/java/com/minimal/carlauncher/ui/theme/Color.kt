@@ -3,6 +3,7 @@ package com.minimal.carlauncher.ui.theme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 
 data class CarColors(
     val bg: Color,
@@ -77,6 +78,29 @@ fun minimalCarColors(palette: MinimalPalette): CarColors = DarkCarColors.copy(
     textMuted = Color(0xFF7D8696),
     accentCyan = palette.accent
 )
+
+/**
+ * Night Dimming: the same colors, only darker, so the screen does not glare
+ * when driving at night. Text stays readable; backgrounds get close to black.
+ */
+fun CarColors.dimmedForNight(): CarColors {
+    fun Color.darker(amount: Float) = lerp(this, Color.Black, amount)
+    return copy(
+        bg = bg.darker(0.45f),
+        surface = surface.darker(0.45f),
+        surfaceVariant = surfaceVariant.darker(0.45f),
+        border = border.darker(0.4f),
+        textPrimary = textPrimary.darker(0.4f),
+        textSecondary = textSecondary.darker(0.4f),
+        textMuted = textMuted.darker(0.35f),
+        accentCyan = accentCyan.darker(0.4f),
+        accentAmber = accentAmber.darker(0.4f),
+        accentGreen = accentGreen.darker(0.4f),
+        accentZLink = accentZLink.darker(0.4f),
+        accentBlue = accentBlue.darker(0.4f),
+        accentRed = accentRed.darker(0.35f)
+    )
+}
 
 val LocalCarColors = staticCompositionLocalOf { DarkCarColors }
 
