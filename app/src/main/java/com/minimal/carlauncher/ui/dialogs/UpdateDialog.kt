@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.minimal.carlauncher.data.NightDimMode
 import com.minimal.carlauncher.service.UpdateInfo
 import com.minimal.carlauncher.ui.theme.MinimalPalette
 import com.minimal.carlauncher.ui.theme.AccentCyan
@@ -84,10 +85,10 @@ fun AboutDialog(
     onChooseAutoStartApp: () -> Unit = {},
     isStatusBarShown: Boolean = true,
     onStatusBarShownChange: (Boolean) -> Unit = {},
-    isNightDimEnabled: Boolean = true,
+    nightDimMode: NightDimMode = NightDimMode.DEFAULT,
     nightDimStartMinute: Int = 18 * 60,
     nightDimEndMinute: Int = 6 * 60,
-    onNightDimEnabledChange: (Boolean) -> Unit = {},
+    onNightDimModeChange: (NightDimMode) -> Unit = {},
     onNightDimStartChange: (Int) -> Unit = {},
     onNightDimEndChange: (Int) -> Unit = {}
 ) {
@@ -609,10 +610,10 @@ fun AboutDialog(
 
                     // 6. Night Dimming: darker colors at night
                     NightDimSetting(
-                        enabled = isNightDimEnabled,
+                        mode = nightDimMode,
                         startMinute = nightDimStartMinute,
                         endMinute = nightDimEndMinute,
-                        onEnabledChange = onNightDimEnabledChange,
+                        onModeChange = onNightDimModeChange,
                         onStartChange = onNightDimStartChange,
                         onEndChange = onNightDimEndChange
                     )
@@ -714,10 +715,10 @@ private fun formatMinuteOfDay(minute: Int): String {
 
 @Composable
 private fun NightDimSetting(
-    enabled: Boolean,
+    mode: NightDimMode,
     startMinute: Int,
     endMinute: Int,
-    onEnabledChange: (Boolean) -> Unit,
+    onModeChange: (NightDimMode) -> Unit,
     onStartChange: (Int) -> Unit,
     onEndChange: (Int) -> Unit
 ) {
@@ -731,6 +732,7 @@ private fun NightDimSetting(
             false
         ).show()
     }
+    val isOn = mode != NightDimMode.OFF
 
     Column(
         modifier = Modifier
@@ -741,64 +743,81 @@ private fun NightDimSetting(
             .padding(horizontal = 14.dp, vertical = 10.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onEnabledChange(!enabled) },
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Row(
-                modifier = Modifier.weight(1f),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (isOn) AccentCyan.copy(alpha = 0.15f)
+                        else TextMuted.copy(alpha = 0.15f)
+                    ),
+                contentAlignment = Alignment.Center
             ) {
+                Icon(
+                    imageVector = Icons.Default.Bedtime,
+                    contentDescription = null,
+                    tint = if (isOn) AccentCyan else TextMuted,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Column {
+                Text(
+                    text = "Night Dimming",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Text(
+                    text = when (mode) {
+                        NightDimMode.OFF -> "Off: always normal colors"
+                        NightDimMode.AUTO -> "Darker when the head unit is in night mode (often when the headlights are on)"
+                        NightDimMode.SCHEDULE ->
+                            "Darker from ${formatMinuteOfDay(startMinute)} to ${formatMinuteOfDay(endMinute)}, every day"
+                        NightDimMode.ALWAYS -> "Always darker colors"
+                    },
+                    fontSize = 11.sp,
+                    color = TextSecondary
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Mode buttons: Off / Auto / Schedule / Always
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            NightDimMode.values().forEach { option ->
+                val selected = option == mode
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (enabled) AccentCyan.copy(alpha = 0.15f)
-                            else TextMuted.copy(alpha = 0.15f)
-                        ),
+                        .weight(1f)
+                        .height(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(if (selected) AccentCyan.copy(alpha = 0.2f) else Color.Transparent)
+                        .border(
+                            1.dp,
+                            if (selected) AccentCyan else CarBorder,
+                            RoundedCornerShape(10.dp)
+                        )
+                        .clickable { onModeChange(option) },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Bedtime,
-                        contentDescription = null,
-                        tint = if (enabled) AccentCyan else TextMuted,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                Column {
                     Text(
-                        text = "Night Dimming",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                    Text(
-                        text = if (enabled) {
-                            "Darker screen from ${formatMinuteOfDay(startMinute)} to ${formatMinuteOfDay(endMinute)}"
-                        } else {
-                            "Off"
-                        },
-                        fontSize = 11.sp,
-                        color = TextSecondary
+                        text = option.label,
+                        fontSize = 12.sp,
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (selected) AccentCyan else TextSecondary
                     )
                 }
             }
-
-            Switch(
-                checked = enabled,
-                onCheckedChange = onEnabledChange,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = AccentCyan
-                )
-            )
         }
 
-        if (enabled) {
+        if (mode == NightDimMode.SCHEDULE) {
             Spacer(modifier = Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(

@@ -29,7 +29,7 @@ class AppRepository(private val context: Context) {
         private const val KEY_MINIMAL_PALETTE = "key_minimal_palette"
         private const val KEY_SHOW_STATUS_BAR = "key_show_status_bar"
         private const val KEY_LAST_LAUNCHED_PACKAGE = "key_last_launched_package"
-        private const val KEY_NIGHT_DIM_ENABLED = "key_night_dim_enabled"
+        private const val KEY_NIGHT_DIM_MODE = "key_night_dim_mode"
         private const val KEY_NIGHT_DIM_START = "key_night_dim_start_minute"
         private const val KEY_NIGHT_DIM_END = "key_night_dim_end_minute"
         const val DEFAULT_NIGHT_START_MINUTE = 18 * 60 // 6:00 PM
@@ -245,13 +245,14 @@ class AppRepository(private val context: Context) {
         }
     }
 
-    /** Night Dimming: darker colors between two times of day (minutes after midnight). On by default. */
-    fun isNightDimEnabled(): Boolean = prefs.getBoolean(KEY_NIGHT_DIM_ENABLED, true)
+    /** Night Dimming: Off, Auto (head unit night mode), Schedule or Always. Schedule by default. */
+    fun getNightDimMode(): NightDimMode = NightDimMode.fromName(prefs.getString(KEY_NIGHT_DIM_MODE, null))
 
-    fun setNightDimEnabled(enabled: Boolean) {
-        prefs.edit().putBoolean(KEY_NIGHT_DIM_ENABLED, enabled).apply()
+    fun setNightDimMode(mode: NightDimMode) {
+        prefs.edit().putString(KEY_NIGHT_DIM_MODE, mode.name).apply()
     }
 
+    /** Schedule times are minutes after midnight. */
     fun getNightDimStartMinute(): Int = prefs.getInt(KEY_NIGHT_DIM_START, DEFAULT_NIGHT_START_MINUTE)
 
     fun getNightDimEndMinute(): Int = prefs.getInt(KEY_NIGHT_DIM_END, DEFAULT_NIGHT_END_MINUTE)

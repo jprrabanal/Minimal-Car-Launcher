@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.minimal.carlauncher.data.AppInfo
 import com.minimal.carlauncher.data.AppRepository
+import com.minimal.carlauncher.data.NightDimMode
 import com.minimal.carlauncher.service.UpdateInfo
 import com.minimal.carlauncher.service.UpdateManager
 import com.minimal.carlauncher.ui.theme.MinimalPalette
@@ -80,9 +81,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val _minimalPalette = MutableStateFlow(MinimalPalette.fromName(repository.getMinimalPaletteName()))
     val minimalPalette: StateFlow<MinimalPalette> = _minimalPalette.asStateFlow()
 
-    // Night Dimming: darker colors between two times of day
-    private val _isNightDimEnabled = MutableStateFlow(repository.isNightDimEnabled())
-    val isNightDimEnabled: StateFlow<Boolean> = _isNightDimEnabled.asStateFlow()
+    // Night Dimming: darker colors at night (Off, Auto, Schedule or Always)
+    private val _nightDimMode = MutableStateFlow(repository.getNightDimMode())
+    val nightDimMode: StateFlow<NightDimMode> = _nightDimMode.asStateFlow()
 
     private val _nightDimStartMinute = MutableStateFlow(repository.getNightDimStartMinute())
     val nightDimStartMinute: StateFlow<Int> = _nightDimStartMinute.asStateFlow()
@@ -90,7 +91,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val _nightDimEndMinute = MutableStateFlow(repository.getNightDimEndMinute())
     val nightDimEndMinute: StateFlow<Int> = _nightDimEndMinute.asStateFlow()
 
-    /** True while the screen should be dimmed right now. */
+    /**
+     * True while the screen should be dimmed right now, for Schedule and Always.
+     * Auto follows the head unit's night mode, which the screen reads itself.
+     */
     private val _isNightDimmed = MutableStateFlow(false)
     val isNightDimmed: StateFlow<Boolean> = _isNightDimmed.asStateFlow()
 
@@ -402,13 +406,17 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private fun updateNightDim(now: Date = Date()) {
         val calendar = Calendar.getInstance().apply { time = now }
         val minuteOfDay = calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE)
-        _isNightDimmed.value = _isNightDimEnabled.value &&
+        _isNightDimmed.value = when (_nightDimMode.value) {
+            NightDimMode.ALWAYS -> true
+            NightDimMode.SCHEDULE ->
                 isWithinNight(minuteOfDay, _nightDimStartMinute.value, _nightDimEndMinute.value)
+            NightDimMode.OFF, NightDimMode.AUTO -> false
+        }
     }
 
-    fun setNightDimEnabled(enabled: Boolean) {
-        repository.setNightDimEnabled(enabled)
-        _isNightDimEnabled.value = enabled
+    fun setNightDimMode(mode: NightDimMode) {
+        repository.setNightDimMode(mode)
+        _nightDimMode.value = mode
         updateNightDim()
     }
 

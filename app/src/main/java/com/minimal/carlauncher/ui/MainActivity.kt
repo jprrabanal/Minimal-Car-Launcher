@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -14,6 +15,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.minimal.carlauncher.data.NightDimMode
 import com.minimal.carlauncher.ui.dashboard.HomeScreen
 import com.minimal.carlauncher.ui.theme.CarBg
 import com.minimal.carlauncher.ui.theme.CarLauncherTheme
@@ -39,7 +41,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             val minimalPalette by viewModel.minimalPalette.collectAsState()
             val isStatusBarShown by viewModel.isStatusBarShown.collectAsState()
-            val isNightDimmed by viewModel.isNightDimmed.collectAsState()
+            val nightDimMode by viewModel.nightDimMode.collectAsState()
+            val isScheduledDim by viewModel.isNightDimmed.collectAsState()
+            // Auto: follow the head unit's own night mode (on many units, the headlights)
+            val headUnitNight = isSystemInDarkTheme()
+            val isNightDimmed = if (nightDimMode == NightDimMode.AUTO) headUnitNight else isScheduledDim
             CarLauncherTheme(palette = minimalPalette, isNightDimmed = isNightDimmed) {
                 // The top bar blends into the launcher background
                 val barColor = CarBg
