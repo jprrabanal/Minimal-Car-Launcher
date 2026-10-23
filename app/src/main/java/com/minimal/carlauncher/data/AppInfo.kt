@@ -7,8 +7,5 @@ data class AppInfo(
     val packageName: String,
     val activityName: String,
     val icon: Drawable? = null,
-    val isZLink: Boolean = false,
-    val isNavigation: Boolean = false,
-    val isMusic: Boolean = false,
-    val isDvr: Boolean = false
+    val isZLink: Boolean = false
 )

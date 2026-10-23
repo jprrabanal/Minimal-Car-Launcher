@@ -6,11 +6,9 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
-import android.net.Uri
 import android.os.Build
 import android.os.SystemClock
 import android.provider.Settings
-import android.widget.Toast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -24,16 +22,10 @@ class AppRepository(private val context: Context) {
     companion object {
         private const val KEY_PINNED_PACKAGES = "key_pinned_dock_packages"
         private const val KEY_DOCK_INITIALIZED_EMPTY = "key_dock_initialized_empty_v2"
-        private const val KEY_CUSTOM_NAV_PACKAGE = "key_custom_nav_package"
-        private const val KEY_CUSTOM_MUSIC_PACKAGE = "key_custom_music_package"
-        private const val KEY_CUSTOM_DVR_PACKAGE = "key_custom_dvr_package"
         private const val KEY_AUTOSTART_ENABLED = "key_autostart_enabled"
         private const val KEY_AUTOSTART_PACKAGE = "key_autostart_package"
         private const val KEY_AUTOSTART_LAST_ELAPSED = "key_autostart_last_elapsed"
         private const val KEY_AUTOSTART_LAST_BOOT_COUNT = "key_autostart_last_boot_count"
-        private const val KEY_MAP_DARK_MODE = "key_map_dark_mode"
-        private const val KEY_DARK_MODE = "key_dark_mode"
-        private const val KEY_MINIMAL_LAYOUT = "key_minimal_layout"
         private const val KEY_MINIMAL_PALETTE = "key_minimal_palette"
         private const val KEY_SHOW_STATUS_BAR = "key_show_status_bar"
         private const val KEY_LAST_LAUNCHED_PACKAGE = "key_last_launched_package"
@@ -50,54 +42,6 @@ class AppRepository(private val context: Context) {
         "com.suding.speedplay",
         "cn.manstep.phonemirrorbox",
         "com.autonavi.amapauto"
-    )
-
-    // Known navigation apps
-    private val navigationPackages = setOf(
-        "com.google.android.apps.maps",
-        "com.waze",
-        "com.here.app.maps",
-        "com.sygic.aura",
-        "com.navfree.android.OSMALL"
-    )
-
-    // Known music players and radio apps
-    private val musicPackages = setOf(
-        "com.spotify.music",
-        "com.google.android.apps.youtube.music",
-        "com.amazon.mp3",
-        "com.apple.android.music",
-        "deezer.android.app",
-        "com.soundcloud.android",
-        "com.pandora.android",
-        "com.nwd.radio",
-        "com.nwd.link.radio",
-        "com.nwd.radio.service",
-        "com.navimods.radio",
-        "com.navimods.radio_free",
-        "com.android.fmradio",
-        "com.softwinner.radio",
-        "com.allwinner.radio",
-        "com.ts.radio",
-        "com.microntek.radio"
-    )
-
-    // Known dashcam / DVR packages found on Android head units
-    private val dvrPackages = setOf(
-        "com.car.dvr",
-        "com.android.dvr",
-        "com.xyauto.dvr",
-        "com.syu.dvr",
-        "com.topway.dvr",
-        "com.teyes.dvr",
-        "com.hcn.dvr",
-        "com.autonavi.dvr",
-        "com.tchip.weatherstation",
-        "com.anket.dvr",
-        "com.mediatek.dvr",
-        "com.allwinner.dvr",
-        "com.cardvr",
-        "com.camera.dvr"
     )
 
     suspend fun getInstalledApps(): List<AppInfo> = withContext(Dispatchers.IO) {
@@ -139,19 +83,13 @@ class AppRepository(private val context: Context) {
                     val activityName = activityInfo.name ?: ""
 
                     val isZLink = isZLinkPackage(pkg, label)
-                    val isNav = isNavPackage(pkg, label)
-                    val isMusic = isMusicPackage(pkg, label)
-                    val isDvr = isDvrPackage(pkg, label)
 
                     AppInfo(
                         label = label,
                         packageName = pkg,
                         activityName = activityName,
                         icon = icon,
-                        isZLink = isZLink,
-                        isNavigation = isNav,
-                        isMusic = isMusic,
-                        isDvr = isDvr
+                        isZLink = isZLink
                     )
                 } catch (e: Throwable) {
                     null
@@ -237,44 +175,6 @@ class AppRepository(private val context: Context) {
         savePinnedPackageNames(current.map { it.packageName })
     }
 
-    // --- Custom Navigation & Music Preferences ---
-
-    fun getCustomNavPackage(): String? = prefs.getString(KEY_CUSTOM_NAV_PACKAGE, null)
-
-    fun setCustomNavPackage(packageName: String) {
-        prefs.edit().putString(KEY_CUSTOM_NAV_PACKAGE, packageName).apply()
-    }
-
-    fun getCustomMusicPackage(): String? = prefs.getString(KEY_CUSTOM_MUSIC_PACKAGE, null)
-
-    fun setCustomMusicPackage(packageName: String) {
-        prefs.edit().putString(KEY_CUSTOM_MUSIC_PACKAGE, packageName).apply()
-    }
-
-    fun resolveNavApp(allApps: List<AppInfo>): AppInfo? {
-        val customPkg = getCustomNavPackage()
-        if (!customPkg.isNullOrBlank()) {
-            val found = allApps.firstOrNull { it.packageName == customPkg }
-            if (found != null) return found
-        }
-        return allApps.firstOrNull { it.isNavigation }
-    }
-
-    fun resolveMusicApp(allApps: List<AppInfo>): AppInfo? {
-        val customPkg = getCustomMusicPackage()
-        if (!customPkg.isNullOrBlank()) {
-            val found = allApps.firstOrNull { it.packageName == customPkg }
-            if (found != null) return found
-        }
-        return allApps.firstOrNull { it.isMusic }
-    }
-
-    fun getCustomDvrPackage(): String? = prefs.getString(KEY_CUSTOM_DVR_PACKAGE, null)
-
-    fun setCustomDvrPackage(packageName: String) {
-        prefs.edit().putString(KEY_CUSTOM_DVR_PACKAGE, packageName).apply()
-    }
-
     fun isAutoStartEnabled(): Boolean = prefs.getBoolean(KEY_AUTOSTART_ENABLED, false)
 
     fun setAutoStartEnabled(enabled: Boolean) {
@@ -340,37 +240,10 @@ class AppRepository(private val context: Context) {
         }
     }
 
-    fun isMinimalLayout(): Boolean = prefs.getBoolean(KEY_MINIMAL_LAYOUT, true)
-
-    fun setMinimalLayout(isMinimal: Boolean) {
-        prefs.edit().putBoolean(KEY_MINIMAL_LAYOUT, isMinimal).apply()
-    }
-
     fun getMinimalPaletteName(): String? = prefs.getString(KEY_MINIMAL_PALETTE, null)
 
     fun setMinimalPaletteName(name: String) {
         prefs.edit().putString(KEY_MINIMAL_PALETTE, name).apply()
-    }
-
-    fun isDarkMode(): Boolean = prefs.getBoolean(KEY_DARK_MODE, false)
-
-    fun setDarkMode(isDark: Boolean) {
-        prefs.edit().putBoolean(KEY_DARK_MODE, isDark).apply()
-    }
-
-    fun isMapDarkMode(): Boolean = isDarkMode()
-
-    fun setMapDarkMode(isDark: Boolean) {
-        setDarkMode(isDark)
-    }
-
-    fun resolveDvrApp(allApps: List<AppInfo>): AppInfo? {
-        val customPkg = getCustomDvrPackage()
-        if (!customPkg.isNullOrBlank()) {
-            val found = allApps.firstOrNull { it.packageName == customPkg }
-            if (found != null) return found
-        }
-        return allApps.firstOrNull { it.isDvr }
     }
 
     // --- Package Helpers ---
@@ -385,43 +258,6 @@ class AppRepository(private val context: Context) {
                 lowerPkg.contains("autokit") ||
                 lowerLabel.contains("zlink") ||
                 lowerLabel.contains("android auto")
-    }
-
-    private fun isNavPackage(pkg: String, label: String): Boolean {
-        val lowerPkg = pkg.lowercase()
-        val lowerLabel = label.lowercase()
-        return navigationPackages.contains(pkg) ||
-                lowerPkg.contains("map") ||
-                lowerPkg.contains("waze") ||
-                lowerPkg.contains("navi") ||
-                lowerLabel.contains("maps") ||
-                lowerLabel.contains("navigation")
-    }
-
-    private fun isMusicPackage(pkg: String, label: String): Boolean {
-        val lowerPkg = pkg.lowercase()
-        val lowerLabel = label.lowercase()
-        return musicPackages.contains(pkg) ||
-                lowerPkg.contains("spotify") ||
-                lowerPkg.contains("music") ||
-                lowerPkg.contains("audio") ||
-                lowerPkg.contains("radio") ||
-                lowerLabel.contains("music") ||
-                lowerLabel.contains("spotify") ||
-                lowerLabel.contains("radio")
-    }
-
-    fun isDvrPackage(pkg: String, label: String = ""): Boolean {
-        val lowerPkg = pkg.lowercase()
-        val lowerLabel = label.lowercase()
-        return dvrPackages.contains(pkg) ||
-                lowerPkg.contains(".dvr") ||
-                lowerPkg.endsWith("dvr") ||
-                lowerPkg.contains("dashcam") ||
-                lowerPkg.contains("carcamera") ||
-                lowerLabel == "dvr" ||
-                lowerLabel.contains("dvr") ||
-                lowerLabel.contains("dashcam")
     }
 
     fun launchApp(appInfo: AppInfo): Boolean {
@@ -461,120 +297,6 @@ class AppRepository(private val context: Context) {
             }
         } catch (e: Exception) {
             launchPackage(packageName)
-        }
-    }
-
-    fun launchSettings() {
-        try {
-            val intent = Intent(android.provider.Settings.ACTION_SETTINGS).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(intent)
-        } catch (e: Exception) {
-            Toast.makeText(context, "Could not open Settings", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    fun launchAddressSearch(): Boolean {
-        return try {
-            val gmmIntent = Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=")).apply {
-                setPackage("com.google.android.apps.maps")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            if (gmmIntent.resolveActivity(context.packageManager) != null) {
-                context.startActivity(gmmIntent)
-                return true
-            }
-
-            val genericGeoIntent = Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=")).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            if (genericGeoIntent.resolveActivity(context.packageManager) != null) {
-                context.startActivity(genericGeoIntent)
-                return true
-            }
-
-            val webIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/maps/search/")).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(webIntent)
-            true
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
-        }
-    }
-
-    fun launchNavigationToCoordinates(latitude: Double, longitude: Double): Boolean {
-        return try {
-            val turnByTurnIntent = Intent(
-                Intent.ACTION_VIEW,
-                Uri.parse("google.navigation:q=$latitude,$longitude&mode=d")
-            ).apply {
-                setPackage("com.google.android.apps.maps")
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            if (turnByTurnIntent.resolveActivity(context.packageManager) != null) {
-                context.startActivity(turnByTurnIntent)
-                return true
-            }
-
-            val geoIntent = Intent(
-                Intent.ACTION_VIEW,
-                Uri.parse("geo:$latitude,$longitude?q=$latitude,$longitude(Destination)")
-            ).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            if (geoIntent.resolveActivity(context.packageManager) != null) {
-                context.startActivity(geoIntent)
-                return true
-            }
-
-            val webIntent = Intent(
-                Intent.ACTION_VIEW,
-                Uri.parse("https://www.google.com/maps/dir/?api=1&destination=$latitude,$longitude")
-            ).apply {
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(webIntent)
-            true
-        } catch (e: Exception) {
-            e.printStackTrace()
-            false
-        }
-    }
-
-    fun getSavedRadioStations(): List<String> {
-        val raw = prefs.getString("key_saved_radio_stations_v2", null)
-            ?: prefs.getString("key_saved_radio_stations_v1", null)
-        val defaultList = listOf("88.6", "95.2", "98.5", "103.7")
-        if (!raw.isNullOrBlank()) {
-            try {
-                val array = JSONArray(raw)
-                val list = mutableListOf<String>()
-                for (i in 0 until array.length()) {
-                    list.add(array.getString(i))
-                }
-                if (list.isNotEmpty()) {
-                    while (list.size < 4 && list.size < defaultList.size) {
-                        list.add(defaultList[list.size])
-                    }
-                    return list.take(4)
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-        return defaultList
-    }
-
-    fun setSavedRadioStation(index: Int, station: String) {
-        val current = getSavedRadioStations().toMutableList()
-        while (current.size < 4) current.add("--.-")
-        if (index in 0 until 4) {
-            current[index] = station
-            val array = JSONArray(current)
-            prefs.edit().putString("key_saved_radio_stations_v2", array.toString()).apply()
         }
     }
 }

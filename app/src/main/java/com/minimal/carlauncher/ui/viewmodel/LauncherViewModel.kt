@@ -6,16 +6,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.minimal.carlauncher.data.AppInfo
 import com.minimal.carlauncher.data.AppRepository
-import com.minimal.carlauncher.service.DiagnosticsManager
-import com.minimal.carlauncher.service.DiagnosticEvent
-import com.minimal.carlauncher.service.NavigationRoute
-import com.minimal.carlauncher.service.NavigationService
-import com.minimal.carlauncher.service.RadioManager
-import com.minimal.carlauncher.service.SpeedometerManager
 import com.minimal.carlauncher.service.UpdateInfo
 import com.minimal.carlauncher.service.UpdateManager
 import com.minimal.carlauncher.ui.theme.MinimalPalette
-import org.osmdroid.util.GeoPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,13 +26,7 @@ import java.util.Locale
 class LauncherViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = AppRepository(application)
-    val speedometer = SpeedometerManager(application)
-    val radioManager = RadioManager(application)
     private val updateManager = UpdateManager(application)
-
-    val radioStation: StateFlow<String?> = radioManager.radioStation
-    val isRadioActive: StateFlow<Boolean> = radioManager.isRadioActive
-    val savedRadioStations: StateFlow<List<String>> = radioManager.savedStations
 
     // Applications State
     private val _allApps = MutableStateFlow<List<AppInfo>>(emptyList())
@@ -62,19 +49,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val _zlinkApp = MutableStateFlow<AppInfo?>(null)
     val zlinkApp: StateFlow<AppInfo?> = _zlinkApp.asStateFlow()
 
-    private val _navigationApp = MutableStateFlow<AppInfo?>(null)
-    val navigationApp: StateFlow<AppInfo?> = _navigationApp.asStateFlow()
-
-    private val _musicApp = MutableStateFlow<AppInfo?>(null)
-    val musicApp: StateFlow<AppInfo?> = _musicApp.asStateFlow()
-
-    private val _dvrApp = MutableStateFlow<AppInfo?>(null)
-    val dvrApp: StateFlow<AppInfo?> = _dvrApp.asStateFlow()
-
-    private val _isDarkMode = MutableStateFlow(repository.isDarkMode())
-    val isDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
-    val isMapDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
-
     // Autostart App (opened once after each head unit boot)
     private val _isAutoStartEnabled = MutableStateFlow(repository.isAutoStartEnabled())
     val isAutoStartEnabled: StateFlow<Boolean> = _isAutoStartEnabled.asStateFlow()
@@ -91,16 +65,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val _isAppDrawerOpen = MutableStateFlow(false)
     val isAppDrawerOpen: StateFlow<Boolean> = _isAppDrawerOpen.asStateFlow()
 
-    // Clock and Date State
-    private val _currentTime = MutableStateFlow("")
-    val currentTime: StateFlow<String> = _currentTime.asStateFlow()
-
-    private val _currentSeconds = MutableStateFlow("")
-    val currentSeconds: StateFlow<String> = _currentSeconds.asStateFlow()
-
-    private val _currentDate = MutableStateFlow("")
-    val currentDate: StateFlow<String> = _currentDate.asStateFlow()
-
     // Minimal home screen clock: 12-hour time without seconds, e.g. "9:41" + "PM"
     // and a full date, e.g. "Monday, Aug. 21, 2026"
     private val _minimalTime = MutableStateFlow("")
@@ -111,9 +75,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     private val _minimalDate = MutableStateFlow("")
     val minimalDate: StateFlow<String> = _minimalDate.asStateFlow()
-
-    private val _isMinimalLayout = MutableStateFlow(repository.isMinimalLayout())
-    val isMinimalLayout: StateFlow<Boolean> = _isMinimalLayout.asStateFlow()
 
     private val _minimalPalette = MutableStateFlow(MinimalPalette.fromName(repository.getMinimalPaletteName()))
     val minimalPalette: StateFlow<MinimalPalette> = _minimalPalette.asStateFlow()
@@ -131,44 +92,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     private val _selectedDrawerAppForAction = MutableStateFlow<AppInfo?>(null)
     val selectedDrawerAppForAction: StateFlow<AppInfo?> = _selectedDrawerAppForAction.asStateFlow()
 
-    private val _isNavPickerOpen = MutableStateFlow(false)
-    val isNavPickerOpen: StateFlow<Boolean> = _isNavPickerOpen.asStateFlow()
-
-    private val _isMusicPickerOpen = MutableStateFlow(false)
-    val isMusicPickerOpen: StateFlow<Boolean> = _isMusicPickerOpen.asStateFlow()
-
-    private val _isDvrPickerOpen = MutableStateFlow(false)
-    val isDvrPickerOpen: StateFlow<Boolean> = _isDvrPickerOpen.asStateFlow()
-
-    // Minimap In-App Live Navigation & Search State
-    private val _isAddressSearchOpen = MutableStateFlow(false)
-    val isAddressSearchOpen: StateFlow<Boolean> = _isAddressSearchOpen.asStateFlow()
-
-    private val _activeRoute = MutableStateFlow<NavigationRoute?>(null)
-    val activeRoute: StateFlow<NavigationRoute?> = _activeRoute.asStateFlow()
-
-    private val _isNavigating = MutableStateFlow(false)
-    val isNavigating: StateFlow<Boolean> = _isNavigating.asStateFlow()
-
-    private val _isCalculatingRoute = MutableStateFlow(false)
-    val isCalculatingRoute: StateFlow<Boolean> = _isCalculatingRoute.asStateFlow()
-
-    private val _navigationDestination = MutableStateFlow<GeoPoint?>(null)
-    val navigationDestination: StateFlow<GeoPoint?> = _navigationDestination.asStateFlow()
-
-    private val _navigationDestinationName = MutableStateFlow("")
-    val navigationDestinationName: StateFlow<String> = _navigationDestinationName.asStateFlow()
-
     // About & In-App Updater State
     val currentVersion: String = updateManager.getCurrentVersionName()
 
     private val _isAboutDialogOpen = MutableStateFlow(false)
     val isAboutDialogOpen: StateFlow<Boolean> = _isAboutDialogOpen.asStateFlow()
-
-    // Diagnostics Dialog State
-    private val _isDiagnosticsDialogOpen = MutableStateFlow(false)
-    val isDiagnosticsDialogOpen: StateFlow<Boolean> = _isDiagnosticsDialogOpen.asStateFlow()
-    val diagnosticEvents: StateFlow<List<DiagnosticEvent>> = DiagnosticsManager.events
 
     private val _isCheckingUpdate = MutableStateFlow(false)
     val isCheckingUpdate: StateFlow<Boolean> = _isCheckingUpdate.asStateFlow()
@@ -182,7 +110,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     init {
         loadApps()
         startClockTicker()
-        radioManager.startMonitoring()
         runAutoStartIfNeeded()
     }
 
@@ -209,16 +136,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
             val apps = repository.getInstalledApps()
             val pinned = repository.getPinnedApps(apps)
             val zlink = apps.firstOrNull { it.isZLink }
-            val nav = repository.resolveNavApp(apps)
-            val music = repository.resolveMusicApp(apps)
-            val dvr = repository.resolveDvrApp(apps)
 
             _allApps.value = apps
             _pinnedApps.value = pinned
             _zlinkApp.value = zlink
-            _navigationApp.value = nav
-            _musicApp.value = music
-            _dvrApp.value = dvr
             _autoStartApp.value = repository.getAutoStartPackage()?.let { pkg ->
                 apps.firstOrNull { it.packageName == pkg }
             }
@@ -227,17 +148,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     private fun startClockTicker() {
         viewModelScope.launch {
-            val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-            val secondsFormat = SimpleDateFormat("ss", Locale.getDefault())
-            val dateFormat = SimpleDateFormat("EEEE, MMMM d", Locale.getDefault())
             val minimalTimeFormat = SimpleDateFormat("h:mm", Locale.getDefault())
             val amPmFormat = SimpleDateFormat("a", Locale.getDefault())
 
             while (isActive) {
                 val now = Date()
-                _currentTime.value = timeFormat.format(now)
-                _currentSeconds.value = secondsFormat.format(now)
-                _currentDate.value = dateFormat.format(now)
                 _minimalTime.value = minimalTimeFormat.format(now)
                 _minimalAmPm.value = amPmFormat.format(now).uppercase(Locale.getDefault())
                 _minimalDate.value = formatMinimalDate(now)
@@ -340,53 +255,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    // --- Navigation & Music Customization ---
-
-    fun openNavPicker() {
-        _isNavPickerOpen.value = true
-    }
-
-    fun closeNavPicker() {
-        _isNavPickerOpen.value = false
-    }
-
-    fun selectNavigationApp(app: AppInfo) {
-        repository.setCustomNavPackage(app.packageName)
-        _navigationApp.value = app
-        _isNavPickerOpen.value = false
-        Toast.makeText(getApplication(), "Navigation set to ${app.label}", Toast.LENGTH_SHORT).show()
-    }
-
-    fun openMusicPicker() {
-        _isMusicPickerOpen.value = true
-    }
-
-    fun closeMusicPicker() {
-        _isMusicPickerOpen.value = false
-    }
-
-    fun selectMusicApp(app: AppInfo) {
-        repository.setCustomMusicPackage(app.packageName)
-        _musicApp.value = app
-        _isMusicPickerOpen.value = false
-        Toast.makeText(getApplication(), "Music player set to ${app.label}", Toast.LENGTH_SHORT).show()
-    }
-
-    fun openDvrPicker() {
-        _isDvrPickerOpen.value = true
-    }
-
-    fun closeDvrPicker() {
-        _isDvrPickerOpen.value = false
-    }
-
-    fun selectDvrApp(app: AppInfo) {
-        repository.setCustomDvrPackage(app.packageName)
-        _dvrApp.value = app
-        _isDvrPickerOpen.value = false
-        Toast.makeText(getApplication(), "Dashcam set to ${app.label}", Toast.LENGTH_SHORT).show()
-    }
-
     // --- Autostart App ---
 
     fun setAutoStartEnabled(enabled: Boolean) {
@@ -409,7 +277,7 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     /**
      * Hardware Back on the home screen (open dialogs close themselves first):
      * close the app drawer if it is open, otherwise go back to the last app
-     * opened from the launcher, like Android Auto or the map.
+     * opened from the launcher, like Android Auto.
      */
     fun onHomeBack() {
         if (_isAppDrawerOpen.value) {
@@ -450,31 +318,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         if (_updateDownloadProgress.value == null) {
             _isAboutDialogOpen.value = false
         }
-    }
-
-    fun openDiagnosticsDialog() {
-        _isDiagnosticsDialogOpen.value = true
-    }
-
-    fun dismissDiagnosticsDialog() {
-        _isDiagnosticsDialogOpen.value = false
-    }
-
-    fun copyDiagnosticsReport() {
-        DiagnosticsManager.copyReportToClipboard(
-            getApplication(),
-            radioStation.value,
-            isRadioActive.value,
-            savedRadioStations.value
-        )
-    }
-
-    fun clearDiagnosticsLog() {
-        DiagnosticsManager.clearEvents()
-    }
-
-    fun pingRadio() {
-        radioManager.requestRadioInfoPing()
     }
 
     fun checkForUpdates(isManualCheck: Boolean = true) {
@@ -522,25 +365,6 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     // --- Other Shortcuts ---
 
-    fun launchDvr() {
-        val dvr = _dvrApp.value
-        if (dvr != null) {
-            repository.launchApp(dvr)
-        } else {
-            val launched = repository.launchPackage("com.car.dvr") ||
-                    repository.launchPackage("com.android.dvr") ||
-                    repository.launchPackage("com.xyauto.dvr") ||
-                    repository.launchPackage("com.syu.dvr") ||
-                    repository.launchPackage("com.teyes.dvr") ||
-                    repository.launchPackage("com.topway.dvr") ||
-                    repository.launchPackage("com.hcn.dvr") ||
-                    repository.launchPackage("com.camera.dvr")
-            if (!launched) {
-                openDvrPicker()
-            }
-        }
-    }
-
     fun launchZLink() {
         val zlink = _zlinkApp.value
         if (zlink != null) {
@@ -557,151 +381,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun launchNavigation() {
-        val nav = _navigationApp.value
-        if (nav != null) {
-            repository.launchApp(nav)
-        } else {
-            if (!repository.launchPackage("com.google.android.apps.maps")) {
-                openAppDrawer()
-            }
-        }
-    }
-
-    fun openAddressSearch() {
-        _isAddressSearchOpen.value = true
-    }
-
-    fun closeAddressSearch() {
-        _isAddressSearchOpen.value = false
-    }
-
-    fun startNavigationTo(destLat: Double, destLon: Double, destName: String = "Destination") {
-        viewModelScope.launch {
-            _isCalculatingRoute.value = true
-            _navigationDestination.value = GeoPoint(destLat, destLon)
-            _navigationDestinationName.value = destName
-            _isAddressSearchOpen.value = false
-
-            val currentLoc = speedometer.currentLocation.value
-            val startLat = currentLoc?.latitude ?: 37.9838
-            val startLon = currentLoc?.longitude ?: 23.7275
-
-            val route = NavigationService.fetchRoute(startLat, startLon, destLat, destLon, destName)
-            _activeRoute.value = route
-            _isNavigating.value = (route != null)
-            _isCalculatingRoute.value = false
-        }
-    }
-
-    fun stopNavigation() {
-        _isNavigating.value = false
-        _activeRoute.value = null
-        _navigationDestination.value = null
-        _navigationDestinationName.value = ""
-        _isCalculatingRoute.value = false
-    }
-
-    fun launchAddressSearch() {
-        repository.launchAddressSearch()
-    }
-
-    fun launchNavigationToCoordinates(latitude: Double, longitude: Double) {
-        repository.launchNavigationToCoordinates(latitude, longitude)
-    }
-
-    fun launchMusic() {
-        val currentStation = radioStation.value
-        val radioPkgs = listOf(
-            "com.nwd.radio",
-            "com.nwd.link.radio",
-            "com.android.fmradio",
-            "com.allwinner.radio",
-            "com.qf.radio",
-            "com.navimods.radio"
-        )
-        // If radio station is active, prioritize launching native headunit radio app
-        if (!currentStation.isNullOrBlank()) {
-            for (pkg in radioPkgs) {
-                if (repository.launchPackage(pkg)) return
-            }
-        }
-
-        val music = _musicApp.value
-        if (music != null) {
-            repository.launchApp(music)
-        } else {
-            for (pkg in radioPkgs) {
-                if (repository.launchPackage(pkg)) return
-            }
-            if (!repository.launchPackage("com.spotify.music")) {
-                openAppDrawer()
-            }
-        }
-    }
-
-    fun launchSettings() {
-        repository.launchSettings()
-    }
-
-    fun toggleSpeedUnit() {
-        speedometer.toggleUnit()
-    }
-
-    fun toggleMinimalLayout() {
-        val next = !_isMinimalLayout.value
-        _isMinimalLayout.value = next
-        repository.setMinimalLayout(next)
-    }
-
     fun selectMinimalPalette(palette: MinimalPalette) {
         _minimalPalette.value = palette
         repository.setMinimalPaletteName(palette.name)
-    }
-
-    fun toggleDarkMode() {
-        val next = !_isDarkMode.value
-        _isDarkMode.value = next
-        repository.setDarkMode(next)
-    }
-
-    fun toggleMapDarkMode() {
-        toggleDarkMode()
-    }
-
-    fun refreshRadio() {
-        radioManager.readCurrentSettingsFrequency()
-        radioManager.requestRadioInfoPing()
-    }
-
-    fun tunePreviousStation() {
-        radioManager.tunePreviousStation()
-    }
-
-    fun tuneNextStation() {
-        radioManager.tuneNextStation()
-    }
-
-    fun tuneToSavedStation(station: String, index: Int) {
-        radioManager.tuneToStation(station, index)
-    }
-
-    fun saveCurrentStationToPreset(index: Int) {
-        val current = radioStation.value
-        if (!current.isNullOrBlank()) {
-            radioManager.savePreset(index, current)
-        }
-    }
-
-    fun showRadioDiagnostic() {
-        val info = radioManager.getRadioDiagnosticInfo()
-        Toast.makeText(getApplication(), info, Toast.LENGTH_LONG).show()
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        speedometer.stopTracking()
-        radioManager.stopMonitoring()
     }
 
     companion object {

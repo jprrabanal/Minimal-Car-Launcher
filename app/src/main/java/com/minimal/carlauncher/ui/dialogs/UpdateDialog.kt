@@ -8,7 +8,6 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,14 +23,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.VerticalAlignTop
 import androidx.compose.material.icons.filled.Refresh
@@ -59,7 +54,6 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.minimal.carlauncher.service.UpdateInfo
 import com.minimal.carlauncher.ui.theme.MinimalPalette
-import com.minimal.carlauncher.ui.theme.AccentAmber
 import com.minimal.carlauncher.ui.theme.AccentCyan
 import com.minimal.carlauncher.ui.theme.AccentGreen
 import com.minimal.carlauncher.ui.theme.CarBorder
@@ -79,10 +73,6 @@ fun AboutDialog(
     onCheckUpdate: () -> Unit,
     onInstall: () -> Unit,
     onDismiss: () -> Unit,
-    isDarkMode: Boolean = false,
-    onToggleDarkMode: () -> Unit = {},
-    isMinimalLayout: Boolean = false,
-    onToggleMinimalLayout: () -> Unit = {},
     minimalPalette: MinimalPalette = MinimalPalette.DEFAULT,
     onSelectMinimalPalette: (MinimalPalette) -> Unit = {},
     isAutoStartEnabled: Boolean = false,
@@ -445,13 +435,13 @@ fun AboutDialog(
                                             Icon(
                                                 imageVector = Icons.Default.SystemUpdate,
                                                 contentDescription = null,
-                                                tint = if (isDarkMode) Color.Black else Color.White,
+                                                tint = Color.Black,
                                                 modifier = Modifier.size(16.dp)
                                             )
                                             Spacer(modifier = Modifier.width(6.dp))
                                             Text(
                                                 text = "Download & Install",
-                                                color = if (isDarkMode) Color.Black else Color.White,
+                                                color = Color.Black,
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 12.sp
                                             )
@@ -501,13 +491,13 @@ fun AboutDialog(
                     ) {
                         FeatureChip(
                             modifier = Modifier.weight(1f),
-                            title = "GPS Speedometer",
-                            desc = "KM/H & MPH"
+                            title = "Big Clock",
+                            desc = "12-hour time and date"
                         )
                         FeatureChip(
                             modifier = Modifier.weight(1f),
-                            title = "Live Dashcam / DVR",
-                            desc = "Floating frame & auto-start"
+                            title = "Autostart App",
+                            desc = "Opens an app when the car starts"
                         )
                     }
 
@@ -531,156 +521,15 @@ fun AboutDialog(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    if (isMinimalLayout) {
-                        // 4. Minimal Colors: soft dark themes (the Minimal style is always dark)
-                        MinimalPalettePicker(
-                            selected = minimalPalette,
-                            onSelect = onSelectMinimalPalette
-                        )
-                    } else {
-                        // 4. Cockpit Theme Setting (Day / Night Light Mode Toggle)
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(CarSurfaceVariant)
-                                .border(1.dp, CarBorder, RoundedCornerShape(12.dp))
-                                .clickable { onToggleDarkMode() }
-                                .padding(horizontal = 14.dp, vertical = 10.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(CircleShape)
-                                            .background(if (isDarkMode) AccentCyan.copy(alpha = 0.15f) else AccentAmber.copy(alpha = 0.15f)),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = if (isDarkMode) Icons.Default.DarkMode else Icons.Default.LightMode,
-                                            contentDescription = null,
-                                            tint = if (isDarkMode) AccentCyan else AccentAmber,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                    Column {
-                                        Text(
-                                            text = "Cockpit Theme",
-                                            fontSize = 13.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = TextPrimary
-                                        )
-                                        Text(
-                                            text = if (isDarkMode) "Dark (Obsidian Night Mode)" else "Light (Daylight High-Contrast)",
-                                            fontSize = 11.sp,
-                                            color = TextSecondary
-                                        )
-                                    }
-                                }
-
-                                Button(
-                                    onClick = onToggleDarkMode,
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (isDarkMode) AccentCyan else AccentAmber
-                                    ),
-                                    shape = RoundedCornerShape(10.dp),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
-                                        contentDescription = null,
-                                        tint = if (isDarkMode) Color(0xFF0A0E17) else Color.White,
-                                        modifier = Modifier.size(15.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = if (isDarkMode) "Switch to Light" else "Switch to Dark",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isDarkMode) Color(0xFF0A0E17) else Color.White
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    // 4. Colors: soft dark themes
+                    MinimalPalettePicker(
+                        selected = minimalPalette,
+                        onSelect = onSelectMinimalPalette
+                    )
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // 5. Home Screen Style Setting (Dashboard or Minimal clock)
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(CarSurfaceVariant)
-                            .border(1.dp, CarBorder, RoundedCornerShape(12.dp))
-                            .clickable { onToggleMinimalLayout() }
-                            .padding(horizontal = 14.dp, vertical = 10.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                modifier = Modifier.weight(1f),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(10.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(CircleShape)
-                                        .background(AccentCyan.copy(alpha = 0.15f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = if (isMinimalLayout) Icons.Default.AccessTime else Icons.Default.Dashboard,
-                                        contentDescription = null,
-                                        tint = AccentCyan,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                }
-                                Column {
-                                    Text(
-                                        text = "Home Screen Style",
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = TextPrimary
-                                    )
-                                    Text(
-                                        text = if (isMinimalLayout) "Minimal (clock, date and app bar)" else "Dashboard (map, radio and tiles)",
-                                        fontSize = 11.sp,
-                                        color = TextSecondary
-                                    )
-                                }
-                            }
-
-                            OutlinedButton(
-                                onClick = onToggleMinimalLayout,
-                                shape = RoundedCornerShape(10.dp),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                            ) {
-                                Text(
-                                    text = if (isMinimalLayout) "Use Dashboard" else "Use Minimal",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = AccentCyan
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // 6. Autostart App Setting (open an app once after each boot)
+                    // 5. Autostart App Setting (open an app once after each boot)
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -749,7 +598,7 @@ fun AboutDialog(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // 7. Show the head unit's top bar (status bar)
+                    // 6. Show the head unit's top bar (status bar)
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -815,7 +664,7 @@ fun AboutDialog(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
-                    // 8. Dialog Footer with Close Button
+                    // 7. Dialog Footer with Close Button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End

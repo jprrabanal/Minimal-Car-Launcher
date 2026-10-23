@@ -6,18 +6,15 @@ A lightweight, distraction-free, and high-contrast Android Home Launcher designe
 
 ## Highlights & Features
 
-- **Automotive Ergonomics**: High-contrast, dark OLED-friendly palette tailored for 1080p in-dash screens.
-- **Dedicated ZLink / Android Auto Tile**: Auto-detects your head unit's ZLink installation (`com.zjinnova.zlink`, `com.xyauto.zlink`, etc.) and launches Android Auto in one tap.
-- **Real-Time GPS Speedometer**: Displays vehicle speed with animated gauge arc and one-tap switching between **KM/H** and **MPH**.
-- **Glanceable Digital Clock**: Large digital clock, seconds indicator, and localized day/date.
+- **Minimal Home Screen**: a large 12-hour clock with the date (for example *Friday, Aug. 21, 2026*) in the center, and one centered bottom bar with All Apps, **Android Auto**, your pinned apps and About.
+  - Always a soft dark theme (no pure black or pure white). Pick from 6 colors in **About → Minimal Colors**: Slate, Midnight Blue, Graphite, Forest, Plum and Mocha.
+  - Scales to common head-unit screens: 1024x600, 1280x720, 1280x800 and 2000x1200.
+- **Android Auto Button**: a round icon in the center of the bar. Auto-detects your head unit's ZLink installation (`com.zjinnova.zlink`, `com.xyauto.zlink`, etc.) and launches Android Auto in one tap.
+- **Hardware Back Button**: closes open windows. On the home screen it takes you back to the last app you opened from the launcher (for example Android Auto).
+- **Head Unit Top Bar**: the status bar stays visible and matches the launcher color. Turn it off in **About → Show Top Bar**.
 - **Customizable Bottom Dock**:
   - **Long-Press Any Icon**: Choose to **Remove** it or **Replace** it with another installed app.
   - Pinned apps are automatically saved across reboots and power cycles.
-- **Two Home Screen Styles** (switch in **About → Home Screen Style**):
-  - **Minimal** (default): a large 12-hour clock with the date (for example *Friday, Aug. 21, 2026*) in the center, and one centered bottom bar with All Apps, **Android Auto**, your pinned apps and About.
-  - **Dashboard**: live map, compass, speedometer, radio and quick-launch tiles.
-  - Minimal always uses a soft dark theme (no pure black or pure white). Pick from 6 colors in **About → Minimal Colors**: Slate, Midnight Blue, Graphite, Forest, Plum and Mocha.
-  - Scales to common head-unit screens: 1024x600, 1280x720, 1280x800 and 2000x1200.
 - **Autostart App on Boot**:
   - Choose any installed app (for example ZLink, music, or your dashcam) to open automatically when the car starts.
   - Open **About** on the dock, tap the **Autostart App** row to pick the app, and use the switch to turn it on or off.

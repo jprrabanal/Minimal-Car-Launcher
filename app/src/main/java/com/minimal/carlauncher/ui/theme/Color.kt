@@ -39,24 +39,6 @@ val DarkCarColors = CarColors(
     isDark = true
 )
 
-// Bright, high-contrast, non-boring automotive daylight palette (Day Mode)
-val LightCarColors = CarColors(
-    bg = Color(0xFFF1F5F9),             // Crisp ice-pearl ambient backdrop
-    surface = Color(0xFFFFFFFF),        // Brilliant white porcelain instrument cards
-    surfaceVariant = Color(0xFFE2E8F0), // Slate 200 elevated chips, search fields, containers
-    border = Color(0xFFCBD5E1),         // Slate 300 razor-sharp structural borders
-    textPrimary = Color(0xFF0F172A),    // Slate 900 maximum optical contrast in direct sunlight
-    textSecondary = Color(0xFF475569),  // Slate 600 secondary information
-    textMuted = Color(0xFF64748B),      // Slate 500 tertiary labels
-    accentCyan = Color(0xFF0284C7),     // Vivid electric azure / sky 600 (rich contrast on white)
-    accentAmber = Color(0xFFD97706),    // Rich warm amber-gold 600
-    accentGreen = Color(0xFF059669),    // Deep emerald racing green 600
-    accentZLink = Color(0xFF059669),    // Crisp CarPlay / Android Auto green
-    accentBlue = Color(0xFF2563EB),     // Striking cobalt sapphire for navigation
-    accentRed = Color(0xFFE11D48),      // Crimson ruby for recordings and warnings
-    isDark = false
-)
-
 /**
  * Soft dark color themes for the Minimal home screen. None of them use pure
  * black or pure white: medium-dark backgrounds and slightly dimmed text are
