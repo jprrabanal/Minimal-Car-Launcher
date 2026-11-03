@@ -32,6 +32,7 @@ class AppRepository(private val context: Context) {
         private const val KEY_NIGHT_DIM_MODE = "key_night_dim_mode"
         private const val KEY_NIGHT_DIM_START = "key_night_dim_start_minute"
         private const val KEY_NIGHT_DIM_END = "key_night_dim_end_minute"
+        private const val KEY_NIGHT_DIM_STRENGTH = "key_night_dim_strength"
         private const val KEY_HOME_STYLE = "key_home_style"
         private const val KEY_DOCK_SIZE = "key_dashboard_dock_size"
         const val DEFAULT_NIGHT_START_MINUTE = 18 * 60 // 6:00 PM
@@ -252,6 +253,14 @@ class AppRepository(private val context: Context) {
 
     fun setNightDimMode(mode: NightDimMode) {
         prefs.edit().putString(KEY_NIGHT_DIM_MODE, mode.name).apply()
+    }
+
+    /** How much darker Night Dimming makes the screen. Medium by default. */
+    fun getNightDimStrength(): NightDimStrength =
+        NightDimStrength.fromName(prefs.getString(KEY_NIGHT_DIM_STRENGTH, null))
+
+    fun setNightDimStrength(strength: NightDimStrength) {
+        prefs.edit().putString(KEY_NIGHT_DIM_STRENGTH, strength.name).apply()
     }
 
     /** Schedule times are minutes after midnight. */

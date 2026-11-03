@@ -27,6 +27,7 @@ A lightweight, distraction-free, and high-contrast Android Home Launcher designe
   - **Auto**: follows the head unit's own night mode (on many head units this turns on with the headlights).
   - **Schedule** (default): darker between two times you choose, 6:00 PM to 6:00 AM at first.
   - **Always**: always darker.
+  - **Dimming Strength**: how much darker it gets: Light, Medium (default), Strong or Maximum. Text stays readable at every level.
 - **Head Unit Top Bar**: the status bar stays visible and matches the launcher color. Turn it off in **About → Show Top Bar**.
 - **Customizable Bottom Dock**:
   - **Long-Press Any Icon**: Choose to **Remove** it or **Replace** it with another installed app.

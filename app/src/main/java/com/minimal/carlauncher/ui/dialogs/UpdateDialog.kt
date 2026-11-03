@@ -59,6 +59,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.minimal.carlauncher.data.DockSize
 import com.minimal.carlauncher.data.HomeStyle
 import com.minimal.carlauncher.data.NightDimMode
+import com.minimal.carlauncher.data.NightDimStrength
 import com.minimal.carlauncher.service.UpdateInfo
 import com.minimal.carlauncher.ui.theme.MinimalPalette
 import com.minimal.carlauncher.ui.theme.AccentCyan
@@ -93,6 +94,8 @@ fun AboutDialog(
     isStatusBarShown: Boolean = true,
     onStatusBarShownChange: (Boolean) -> Unit = {},
     nightDimMode: NightDimMode = NightDimMode.DEFAULT,
+    nightDimStrength: NightDimStrength = NightDimStrength.DEFAULT,
+    onNightDimStrengthChange: (NightDimStrength) -> Unit = {},
     nightDimStartMinute: Int = 18 * 60,
     nightDimEndMinute: Int = 6 * 60,
     onNightDimModeChange: (NightDimMode) -> Unit = {},
@@ -628,6 +631,8 @@ fun AboutDialog(
                     // 6. Night Dimming: darker colors at night
                     NightDimSetting(
                         mode = nightDimMode,
+                        strength = nightDimStrength,
+                        onStrengthChange = onNightDimStrengthChange,
                         startMinute = nightDimStartMinute,
                         endMinute = nightDimEndMinute,
                         onModeChange = onNightDimModeChange,
@@ -733,6 +738,8 @@ private fun formatMinuteOfDay(minute: Int): String {
 @Composable
 private fun NightDimSetting(
     mode: NightDimMode,
+    strength: NightDimStrength,
+    onStrengthChange: (NightDimStrength) -> Unit,
     startMinute: Int,
     endMinute: Int,
     onModeChange: (NightDimMode) -> Unit,
@@ -832,6 +839,23 @@ private fun NightDimSetting(
                     )
                 }
             }
+        }
+
+        if (isOn) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = "Dimming Strength",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            ChoiceRow(
+                options = NightDimStrength.values().toList(),
+                selected = strength,
+                label = { it.label },
+                onSelect = onStrengthChange
+            )
         }
 
         if (mode == NightDimMode.SCHEDULE) {

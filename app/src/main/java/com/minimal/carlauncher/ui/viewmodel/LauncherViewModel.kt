@@ -11,6 +11,7 @@ import com.minimal.carlauncher.data.AppRepository
 import com.minimal.carlauncher.data.DockSize
 import com.minimal.carlauncher.data.HomeStyle
 import com.minimal.carlauncher.data.NightDimMode
+import com.minimal.carlauncher.data.NightDimStrength
 import com.minimal.carlauncher.service.BrightnessLevel
 import com.minimal.carlauncher.service.LocationMonitor
 import com.minimal.carlauncher.service.MusicMonitor
@@ -126,6 +127,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     // Night Dimming: darker colors at night (Off, Auto, Schedule or Always)
     private val _nightDimMode = MutableStateFlow(repository.getNightDimMode())
     val nightDimMode: StateFlow<NightDimMode> = _nightDimMode.asStateFlow()
+
+    private val _nightDimStrength = MutableStateFlow(repository.getNightDimStrength())
+    val nightDimStrength: StateFlow<NightDimStrength> = _nightDimStrength.asStateFlow()
 
     private val _nightDimStartMinute = MutableStateFlow(repository.getNightDimStartMinute())
     val nightDimStartMinute: StateFlow<Int> = _nightDimStartMinute.asStateFlow()
@@ -469,6 +473,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         repository.setNightDimMode(mode)
         _nightDimMode.value = mode
         updateNightDim()
+    }
+
+    fun setNightDimStrength(strength: NightDimStrength) {
+        repository.setNightDimStrength(strength)
+        _nightDimStrength.value = strength
     }
 
     fun setNightDimStart(minuteOfDay: Int) {

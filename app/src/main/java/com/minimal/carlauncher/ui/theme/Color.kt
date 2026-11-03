@@ -81,24 +81,29 @@ fun minimalCarColors(palette: MinimalPalette): CarColors = DarkCarColors.copy(
 
 /**
  * Night Dimming: the same colors, only darker, so the screen does not glare
- * when driving at night. Text stays readable; backgrounds get close to black.
+ * when driving at night. [strength] is how much darker the backgrounds get
+ * (0.45 = Medium). Text is dimmed a little less, and never more than 60%,
+ * so it stays readable even at the strongest setting.
  */
-fun CarColors.dimmedForNight(): CarColors {
+fun CarColors.dimmedForNight(strength: Float = 0.45f): CarColors {
     fun Color.darker(amount: Float) = lerp(this, Color.Black, amount)
+    val bgAmount = strength.coerceIn(0f, 0.9f)
+    val textAmount = (bgAmount * 0.89f).coerceAtMost(0.6f)       // 0.4 at Medium
+    val mutedAmount = (bgAmount * 0.78f).coerceAtMost(0.55f)     // 0.35 at Medium
     return copy(
-        bg = bg.darker(0.45f),
-        surface = surface.darker(0.45f),
-        surfaceVariant = surfaceVariant.darker(0.45f),
-        border = border.darker(0.4f),
-        textPrimary = textPrimary.darker(0.4f),
-        textSecondary = textSecondary.darker(0.4f),
-        textMuted = textMuted.darker(0.35f),
-        accentCyan = accentCyan.darker(0.4f),
-        accentAmber = accentAmber.darker(0.4f),
-        accentGreen = accentGreen.darker(0.4f),
-        accentZLink = accentZLink.darker(0.4f),
-        accentBlue = accentBlue.darker(0.4f),
-        accentRed = accentRed.darker(0.35f)
+        bg = bg.darker(bgAmount),
+        surface = surface.darker(bgAmount),
+        surfaceVariant = surfaceVariant.darker(bgAmount),
+        border = border.darker(textAmount),
+        textPrimary = textPrimary.darker(textAmount),
+        textSecondary = textSecondary.darker(textAmount),
+        textMuted = textMuted.darker(mutedAmount),
+        accentCyan = accentCyan.darker(textAmount),
+        accentAmber = accentAmber.darker(textAmount),
+        accentGreen = accentGreen.darker(textAmount),
+        accentZLink = accentZLink.darker(textAmount),
+        accentBlue = accentBlue.darker(textAmount),
+        accentRed = accentRed.darker(mutedAmount)
     )
 }
 

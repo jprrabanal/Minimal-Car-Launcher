@@ -57,6 +57,7 @@ fun HomeScreen(
     val autoStartApp by viewModel.autoStartApp.collectAsState()
     val isStatusBarShown by viewModel.isStatusBarShown.collectAsState()
     val nightDimMode by viewModel.nightDimMode.collectAsState()
+    val nightDimStrength by viewModel.nightDimStrength.collectAsState()
     val nightDimStartMinute by viewModel.nightDimStartMinute.collectAsState()
     val nightDimEndMinute by viewModel.nightDimEndMinute.collectAsState()
 
@@ -199,6 +200,8 @@ fun HomeScreen(
             isStatusBarShown = isStatusBarShown,
             onStatusBarShownChange = { shown -> viewModel.setStatusBarShown(shown) },
             nightDimMode = nightDimMode,
+            nightDimStrength = nightDimStrength,
+            onNightDimStrengthChange = { strength -> viewModel.setNightDimStrength(strength) },
             nightDimStartMinute = nightDimStartMinute,
             nightDimEndMinute = nightDimEndMinute,
             onNightDimModeChange = { mode -> viewModel.setNightDimMode(mode) },

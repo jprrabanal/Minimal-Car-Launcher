@@ -71,7 +71,12 @@ class MainActivity : ComponentActivity() {
             // Auto: follow the head unit's own night mode (on many units, the headlights)
             val headUnitNight = isSystemInDarkTheme()
             val isNightDimmed = if (nightDimMode == NightDimMode.AUTO) headUnitNight else isScheduledDim
-            CarLauncherTheme(palette = minimalPalette, isNightDimmed = isNightDimmed) {
+            val nightDimStrength by viewModel.nightDimStrength.collectAsState()
+            CarLauncherTheme(
+                palette = minimalPalette,
+                isNightDimmed = isNightDimmed,
+                nightDimStrength = nightDimStrength.amount
+            ) {
                 // The top bar blends into the launcher background
                 val barColor = CarBg
                 SideEffect {
