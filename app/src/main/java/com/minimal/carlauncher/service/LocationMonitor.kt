@@ -78,7 +78,9 @@ class LocationMonitor(private val context: Context) {
 
     @SuppressLint("MissingPermission") // Checked by hasPermission()
     fun start() {
-        if (isStarted || locationManager == null || !hasPermission()) return
+        // A local copy, so Kotlin knows it stays non-null inside the lambdas below
+        val locationManager = locationManager ?: return
+        if (isStarted || !hasPermission()) return
         try {
             val providers = locationManager.getProviders(true)
             if (LocationManager.GPS_PROVIDER in providers) {
