@@ -96,6 +96,10 @@ fun AboutDialog(
     nightDimMode: NightDimMode = NightDimMode.DEFAULT,
     nightDimStrength: NightDimStrength = NightDimStrength.DEFAULT,
     onNightDimStrengthChange: (NightDimStrength) -> Unit = {},
+    isDimAllAppsEnabled: Boolean = false,
+    canDrawOverlays: Boolean = false,
+    onDimAllAppsChange: (Boolean) -> Unit = {},
+    onAllowOverlay: () -> Unit = {},
     nightDimStartMinute: Int = 18 * 60,
     nightDimEndMinute: Int = 6 * 60,
     onNightDimModeChange: (NightDimMode) -> Unit = {},
@@ -633,6 +637,10 @@ fun AboutDialog(
                         mode = nightDimMode,
                         strength = nightDimStrength,
                         onStrengthChange = onNightDimStrengthChange,
+                        isDimAllAppsEnabled = isDimAllAppsEnabled,
+                        canDrawOverlays = canDrawOverlays,
+                        onDimAllAppsChange = onDimAllAppsChange,
+                        onAllowOverlay = onAllowOverlay,
                         startMinute = nightDimStartMinute,
                         endMinute = nightDimEndMinute,
                         onModeChange = onNightDimModeChange,
@@ -740,6 +748,10 @@ private fun NightDimSetting(
     mode: NightDimMode,
     strength: NightDimStrength,
     onStrengthChange: (NightDimStrength) -> Unit,
+    isDimAllAppsEnabled: Boolean,
+    canDrawOverlays: Boolean,
+    onDimAllAppsChange: (Boolean) -> Unit,
+    onAllowOverlay: () -> Unit,
     startMinute: Int,
     endMinute: Int,
     onModeChange: (NightDimMode) -> Unit,
@@ -856,6 +868,47 @@ private fun NightDimSetting(
                 label = { it.label },
                 onSelect = onStrengthChange
             )
+
+            // Dim All Apps: the same dimming over Android Auto, maps and every other app
+            Spacer(modifier = Modifier.height(10.dp))
+            val needsPermission = isDimAllAppsEnabled && !canDrawOverlays
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .clickable {
+                        if (needsPermission) onAllowOverlay() else onDimAllAppsChange(!isDimAllAppsEnabled)
+                    }
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Dim All Apps",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    Text(
+                        text = when {
+                            needsPermission -> "Tap here and allow \"Display over other apps\" to finish"
+                            isDimAllAppsEnabled -> "Also darkens Android Auto, maps and every other app"
+                            else -> "Off: only the launcher gets darker"
+                        },
+                        fontSize = 11.sp,
+                        color = if (needsPermission) AccentCyan else TextSecondary
+                    )
+                }
+                Switch(
+                    checked = isDimAllAppsEnabled,
+                    onCheckedChange = onDimAllAppsChange,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = Color.White,
+                        checkedTrackColor = AccentCyan
+                    )
+                )
+            }
         }
 
         if (mode == NightDimMode.SCHEDULE) {

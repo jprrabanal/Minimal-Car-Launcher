@@ -28,6 +28,11 @@ A lightweight, distraction-free, and high-contrast Android Home Launcher designe
   - **Schedule** (default): darker between two times you choose, 6:00 PM to 6:00 AM at first.
   - **Always**: always darker.
   - **Dimming Strength**: how much darker it gets: Light, Medium (default), Strong or Maximum. Text stays readable at every level.
+  - **Dim All Apps**: also darkens Android Auto, maps and every other app, not only the launcher. It uses the same mode, schedule and strength. Turn it on in **About → Night Dimming → Dim All Apps**, then allow **Display over other apps**.
+    - The dark layer never blocks taps.
+    - It runs with a small "Screen dimmer is on" notification, so the head unit is less likely to close it. If the head unit closes it anyway, it comes back the next time the home screen opens.
+    - Strength is limited to 80% darkness, because Android 12 and newer block taps through darker layers.
+    - Turn off other dimmer apps (like Night Screen) so the screen is not dimmed twice.
 - **Head Unit Top Bar**: the status bar stays visible and matches the launcher color. Turn it off in **About → Show Top Bar**.
 - **Customizable Bottom Dock**:
   - **Long-Press Any Icon**: Choose to **Remove** it or **Replace** it with another installed app.

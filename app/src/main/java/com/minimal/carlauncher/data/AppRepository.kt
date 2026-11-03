@@ -33,6 +33,7 @@ class AppRepository(private val context: Context) {
         private const val KEY_NIGHT_DIM_START = "key_night_dim_start_minute"
         private const val KEY_NIGHT_DIM_END = "key_night_dim_end_minute"
         private const val KEY_NIGHT_DIM_STRENGTH = "key_night_dim_strength"
+        private const val KEY_DIM_ALL_APPS = "key_dim_all_apps"
         private const val KEY_HOME_STYLE = "key_home_style"
         private const val KEY_DOCK_SIZE = "key_dashboard_dock_size"
         const val DEFAULT_NIGHT_START_MINUTE = 18 * 60 // 6:00 PM
@@ -261,6 +262,13 @@ class AppRepository(private val context: Context) {
 
     fun setNightDimStrength(strength: NightDimStrength) {
         prefs.edit().putString(KEY_NIGHT_DIM_STRENGTH, strength.name).apply()
+    }
+
+    /** Dim All Apps: also darken other apps (Android Auto, maps...) with a screen layer. Off by default. */
+    fun isDimAllAppsEnabled(): Boolean = prefs.getBoolean(KEY_DIM_ALL_APPS, false)
+
+    fun setDimAllAppsEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_DIM_ALL_APPS, enabled).apply()
     }
 
     /** Schedule times are minutes after midnight. */

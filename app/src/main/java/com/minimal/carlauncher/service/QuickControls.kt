@@ -58,6 +58,13 @@ class QuickControls(private val context: Context) {
         )
     }
 
+    /** Opens the screen where the user allows "Display over other apps" (for Dim All Apps). */
+    fun openOverlayPermission() {
+        startSettings(
+            Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}"))
+        )
+    }
+
     /** Shows the system volume slider for music. */
     fun showVolumePanel() {
         try {

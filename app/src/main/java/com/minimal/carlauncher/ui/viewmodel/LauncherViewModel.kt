@@ -17,6 +17,7 @@ import com.minimal.carlauncher.service.LocationMonitor
 import com.minimal.carlauncher.service.MusicMonitor
 import com.minimal.carlauncher.service.NowPlaying
 import com.minimal.carlauncher.service.QuickControls
+import com.minimal.carlauncher.service.ScreenDimService
 import com.minimal.carlauncher.service.UpdateInfo
 import com.minimal.carlauncher.service.UpdateManager
 import com.minimal.carlauncher.service.WeatherInfo
@@ -130,6 +131,13 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     private val _nightDimStrength = MutableStateFlow(repository.getNightDimStrength())
     val nightDimStrength: StateFlow<NightDimStrength> = _nightDimStrength.asStateFlow()
+
+    // Dim All Apps: the same dimming, over every app (needs "Display over other apps")
+    private val _isDimAllAppsEnabled = MutableStateFlow(repository.isDimAllAppsEnabled())
+    val isDimAllAppsEnabled: StateFlow<Boolean> = _isDimAllAppsEnabled.asStateFlow()
+
+    private val _canDrawOverlays = MutableStateFlow(ScreenDimService.canDrawOverlays(application))
+    val canDrawOverlays: StateFlow<Boolean> = _canDrawOverlays.asStateFlow()
 
     private val _nightDimStartMinute = MutableStateFlow(repository.getNightDimStartMinute())
     val nightDimStartMinute: StateFlow<Int> = _nightDimStartMinute.asStateFlow()
@@ -473,23 +481,27 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         repository.setNightDimMode(mode)
         _nightDimMode.value = mode
         updateNightDim()
+        ScreenDimService.sync(getApplication())
     }
 
     fun setNightDimStrength(strength: NightDimStrength) {
         repository.setNightDimStrength(strength)
         _nightDimStrength.value = strength
+        ScreenDimService.sync(getApplication())
     }
 
     fun setNightDimStart(minuteOfDay: Int) {
         _nightDimStartMinute.value = minuteOfDay
         repository.setNightDimTimes(minuteOfDay, _nightDimEndMinute.value)
         updateNightDim()
+        ScreenDimService.sync(getApplication())
     }
 
     fun setNightDimEnd(minuteOfDay: Int) {
         _nightDimEndMinute.value = minuteOfDay
         repository.setNightDimTimes(_nightDimStartMinute.value, minuteOfDay)
         updateNightDim()
+        ScreenDimService.sync(getApplication())
     }
 
     fun selectMinimalPalette(palette: MinimalPalette) {
@@ -514,6 +526,34 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun onScreenVisible() {
         isScreenVisible = true
         refreshDashboardSources()
+        // Also restarts the dimmer if the head unit closed it
+        refreshDimAllApps()
+    }
+
+    // --- Dim All Apps ---
+
+    /**
+     * Turns Dim All Apps on or off. Turning it on without the "Display over
+     * other apps" permission opens that settings screen first; the dimmer
+     * starts when the user comes back to the launcher.
+     */
+    fun setDimAllAppsEnabled(enabled: Boolean) {
+        repository.setDimAllAppsEnabled(enabled)
+        _isDimAllAppsEnabled.value = enabled
+        if (enabled && !ScreenDimService.canDrawOverlays(getApplication())) {
+            openOverlayPermission()
+        }
+        refreshDimAllApps()
+    }
+
+    fun openOverlayPermission() {
+        quickControls.openOverlayPermission()
+        Toast.makeText(getApplication(), "Allow Car Launcher to display over other apps", Toast.LENGTH_LONG).show()
+    }
+
+    private fun refreshDimAllApps() {
+        _canDrawOverlays.value = ScreenDimService.canDrawOverlays(getApplication())
+        ScreenDimService.sync(getApplication())
     }
 
     /** Another app is on screen (onPause): stop the GPS and music updates to save power. */
