@@ -129,8 +129,12 @@ fun MinimalHomeScreen(
     }
 }
 
+/**
+ * The bottom bar: All Apps, Android Auto, pinned apps, (+) and About.
+ * Shared by both home screens. [scale] makes the buttons bigger (Dashboard only).
+ */
 @Composable
-private fun MinimalDock(
+internal fun MinimalDock(
     zlinkApp: AppInfo?,
     pinnedApps: List<AppInfo>,
     isUpdateAvailable: Boolean,
@@ -140,61 +144,63 @@ private fun MinimalDock(
     onLongClickApp: (AppInfo) -> Unit,
     onAddApp: () -> Unit,
     onOpenAbout: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    scale: Float = 1f
 ) {
     Row(
         modifier = modifier
-            .height(74.dp)
-            .clip(RoundedCornerShape(37.dp))
+            .height((74 * scale).dp)
+            .clip(RoundedCornerShape((37 * scale).dp))
             .background(CarSurface)
-            .border(1.dp, CarBorder.copy(alpha = 0.55f), RoundedCornerShape(37.dp))
-            .padding(horizontal = 11.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .border(1.dp, CarBorder.copy(alpha = 0.55f), RoundedCornerShape((37 * scale).dp))
+            .padding(horizontal = (11 * scale).dp, vertical = (6 * scale).dp),
+        horizontalArrangement = Arrangement.spacedBy((8 * scale).dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        RoundIconButton(onClick = onOpenAppDrawer) {
+        RoundIconButton(onClick = onOpenAppDrawer, scale = scale) {
             Icon(
                 imageVector = Icons.Default.Apps,
                 contentDescription = "All Apps",
                 tint = AccentCyan,
-                modifier = Modifier.size(26.dp)
+                modifier = Modifier.size((26 * scale).dp)
             )
         }
 
-        AndroidAutoButton(zlinkApp = zlinkApp, onClick = onLaunchZLink)
+        AndroidAutoButton(zlinkApp = zlinkApp, onClick = onLaunchZLink, scale = scale)
 
         // Pinned apps scroll if they do not all fit
         Row(
             modifier = Modifier
                 .weight(1f, fill = false)
                 .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy((8 * scale).dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             pinnedApps.forEach { app ->
                 DockAppIcon(
                     app = app,
                     onClick = { onLaunchApp(app) },
-                    onLongClick = { onLongClickApp(app) }
+                    onLongClick = { onLongClickApp(app) },
+                    scale = scale
                 )
             }
             if (pinnedApps.size < AppRepository.MAX_DOCK_APPS) {
-                DockAddButton(onClick = onAddApp)
+                DockAddButton(onClick = onAddApp, scale = scale)
             }
         }
 
-        RoundIconButton(onClick = onOpenAbout) {
+        RoundIconButton(onClick = onOpenAbout, scale = scale) {
             Icon(
                 imageVector = Icons.Default.Info,
                 contentDescription = "About & Settings",
                 tint = TextSecondary,
-                modifier = Modifier.size(24.dp)
+                modifier = Modifier.size((24 * scale).dp)
             )
             if (isUpdateAvailable) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(8.dp)
+                        .padding((8 * scale).dp)
                         .size(9.dp)
                         .clip(CircleShape)
                         .background(AccentRed)
@@ -207,11 +213,12 @@ private fun MinimalDock(
 @Composable
 private fun RoundIconButton(
     onClick: () -> Unit,
+    scale: Float = 1f,
     content: @Composable androidx.compose.foundation.layout.BoxScope.() -> Unit
 ) {
     Box(
         modifier = Modifier
-            .size(52.dp)
+            .size((52 * scale).dp)
             .clip(CircleShape)
             .background(CarSurfaceVariant.copy(alpha = 0.8f))
             .border(1.dp, CarBorder.copy(alpha = 0.45f), CircleShape)
@@ -225,12 +232,13 @@ private fun RoundIconButton(
 @Composable
 private fun AndroidAutoButton(
     zlinkApp: AppInfo?,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    scale: Float = 1f
 ) {
-    val iconBitmap = zlinkApp?.let { BitmapHelper.safeDrawableToImageBitmap(it.icon, 96, 96) }
+    val iconBitmap = zlinkApp?.let { BitmapHelper.safeDrawableToImageBitmap(it.icon, (96 * scale).toInt(), (96 * scale).toInt()) }
     Box(
         modifier = Modifier
-            .size(56.dp)
+            .size((56 * scale).dp)
             .clip(CircleShape)
             .background(AccentZLink.copy(alpha = 0.15f))
             .border(1.5.dp, AccentZLink.copy(alpha = 0.6f), CircleShape)
@@ -241,14 +249,14 @@ private fun AndroidAutoButton(
             Image(
                 bitmap = iconBitmap,
                 contentDescription = zlinkApp?.label ?: "Android Auto",
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size((40 * scale).dp)
             )
         } else {
             Icon(
                 imageVector = Icons.Default.DirectionsCar,
                 contentDescription = "Android Auto",
                 tint = AccentZLink,
-                modifier = Modifier.size(30.dp)
+                modifier = Modifier.size((30 * scale).dp)
             )
         }
     }
@@ -261,12 +269,13 @@ private fun DockAppIcon(
     app: AppInfo,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    scale: Float = 1f
 ) {
-    val imageBitmap = BitmapHelper.safeDrawableToImageBitmap(app.icon, 72, 72)
+    val imageBitmap = BitmapHelper.safeDrawableToImageBitmap(app.icon, (72 * scale).toInt(), (72 * scale).toInt())
     Box(
         modifier = modifier
-            .size(52.dp)
+            .size((52 * scale).dp)
             .clip(CircleShape)
             .background(CarSurfaceVariant.copy(alpha = 0.8f))
             .border(1.dp, CarBorder.copy(alpha = 0.45f), CircleShape)
@@ -274,19 +283,19 @@ private fun DockAppIcon(
                 onClick = onClick,
                 onLongClick = onLongClick
             )
-            .padding(6.dp),
+            .padding((6 * scale).dp),
         contentAlignment = Alignment.Center
     ) {
         if (imageBitmap != null) {
             Image(
                 bitmap = imageBitmap,
                 contentDescription = app.label,
-                modifier = Modifier.size(38.dp)
+                modifier = Modifier.size((38 * scale).dp)
             )
         } else {
             Text(
                 text = app.label.take(1).uppercase(),
-                fontSize = 16.sp,
+                fontSize = (16 * scale).sp,
                 fontWeight = FontWeight.Bold,
                 color = AccentCyan
             )
@@ -298,11 +307,12 @@ private fun DockAppIcon(
 @Composable
 private fun DockAddButton(
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    scale: Float = 1f
 ) {
     Box(
         modifier = modifier
-            .size(52.dp)
+            .size((52 * scale).dp)
             .clip(CircleShape)
             .background(CarSurfaceVariant.copy(alpha = 0.8f))
             .border(1.dp, AccentCyan.copy(alpha = 0.45f), CircleShape)
@@ -313,7 +323,7 @@ private fun DockAddButton(
             imageVector = Icons.Default.Add,
             contentDescription = "Add App to Bar",
             tint = AccentCyan,
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size((24 * scale).dp)
         )
     }
 }

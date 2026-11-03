@@ -9,6 +9,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.minimal.carlauncher.data.HomeStyle
 import com.minimal.carlauncher.ui.dialogs.AboutDialog
 import com.minimal.carlauncher.ui.dialogs.AppPickerDialog
 import com.minimal.carlauncher.ui.dialogs.DockActionDialog
@@ -17,10 +18,14 @@ import com.minimal.carlauncher.ui.drawer.AppDrawerDialog
 import com.minimal.carlauncher.ui.theme.CarBg
 import com.minimal.carlauncher.ui.viewmodel.LauncherViewModel
 
-/** The launcher's only screen: the Minimal home (clock, date, app bar) and its dialogs. */
+/**
+ * The launcher's only screen: the Minimal home (clock, date, app bar) or the
+ * Dashboard home (adds music, weather, speed and quick buttons), and the dialogs.
+ */
 @Composable
 fun HomeScreen(
     viewModel: LauncherViewModel,
+    onRequestLocationPermission: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val allApps by viewModel.allApps.collectAsState()
@@ -33,6 +38,14 @@ fun HomeScreen(
     val minimalTime by viewModel.minimalTime.collectAsState()
     val minimalAmPm by viewModel.minimalAmPm.collectAsState()
     val minimalDate by viewModel.minimalDate.collectAsState()
+    val homeStyle by viewModel.homeStyle.collectAsState()
+    val dockSize by viewModel.dockSize.collectAsState()
+    val weather by viewModel.weather.collectAsState()
+    val speedKmh by viewModel.speedKmh.collectAsState()
+    val hasLocationPermission by viewModel.hasLocationPermission.collectAsState()
+    val nowPlaying by viewModel.nowPlaying.collectAsState()
+    val hasMusicAccess by viewModel.hasMusicAccess.collectAsState()
+    val brightnessLevel by viewModel.brightnessLevel.collectAsState()
 
     // Dialog States
     val selectedDockApp by viewModel.selectedDockAppForAction.collectAsState()
@@ -44,6 +57,7 @@ fun HomeScreen(
     val autoStartApp by viewModel.autoStartApp.collectAsState()
     val isStatusBarShown by viewModel.isStatusBarShown.collectAsState()
     val nightDimMode by viewModel.nightDimMode.collectAsState()
+    val nightDimStrength by viewModel.nightDimStrength.collectAsState()
     val nightDimStartMinute by viewModel.nightDimStartMinute.collectAsState()
     val nightDimEndMinute by viewModel.nightDimEndMinute.collectAsState()
 
@@ -59,20 +73,53 @@ fun HomeScreen(
             .background(CarBg)
             .padding(14.dp)
     ) {
-        MinimalHomeScreen(
-            time = minimalTime,
-            amPm = minimalAmPm,
-            date = minimalDate,
-            zlinkApp = zlinkApp,
-            pinnedApps = pinnedApps,
-            isUpdateAvailable = updateInfo?.isUpdateAvailable == true,
-            onOpenAppDrawer = { viewModel.openAppDrawer() },
-            onLaunchZLink = { viewModel.launchZLink() },
-            onLaunchApp = { app -> viewModel.launchApp(app) },
-            onLongClickApp = { app -> viewModel.onDockAppLongClick(app) },
-            onAddApp = { viewModel.openAddDockPicker() },
-            onOpenAbout = { viewModel.openAboutDialog() }
-        )
+        when (homeStyle) {
+            HomeStyle.MINIMAL -> MinimalHomeScreen(
+                time = minimalTime,
+                amPm = minimalAmPm,
+                date = minimalDate,
+                zlinkApp = zlinkApp,
+                pinnedApps = pinnedApps,
+                isUpdateAvailable = updateInfo?.isUpdateAvailable == true,
+                onOpenAppDrawer = { viewModel.openAppDrawer() },
+                onLaunchZLink = { viewModel.launchZLink() },
+                onLaunchApp = { app -> viewModel.launchApp(app) },
+                onLongClickApp = { app -> viewModel.onDockAppLongClick(app) },
+                onAddApp = { viewModel.openAddDockPicker() },
+                onOpenAbout = { viewModel.openAboutDialog() }
+            )
+            HomeStyle.DASHBOARD -> DashboardHomeScreen(
+                time = minimalTime,
+                amPm = minimalAmPm,
+                date = minimalDate,
+                weather = weather,
+                speedKmh = speedKmh,
+                hasLocationPermission = hasLocationPermission,
+                nowPlaying = nowPlaying,
+                hasMusicAccess = hasMusicAccess,
+                brightnessLevel = brightnessLevel,
+                dockSize = dockSize,
+                zlinkApp = zlinkApp,
+                pinnedApps = pinnedApps,
+                isUpdateAvailable = updateInfo?.isUpdateAvailable == true,
+                onRequestLocation = onRequestLocationPermission,
+                onMusicPlayPause = { viewModel.musicPlayPause() },
+                onMusicNext = { viewModel.musicNext() },
+                onMusicPrevious = { viewModel.musicPrevious() },
+                onOpenMusicApp = { viewModel.openMusicApp() },
+                onAllowMusicAccess = { viewModel.openNotificationAccess() },
+                onBrightness = { viewModel.cycleBrightness() },
+                onVolume = { viewModel.showVolumePanel() },
+                onBluetooth = { viewModel.openBluetoothSettings() },
+                onWifi = { viewModel.openWifiSettings() },
+                onOpenAppDrawer = { viewModel.openAppDrawer() },
+                onLaunchZLink = { viewModel.launchZLink() },
+                onLaunchApp = { app -> viewModel.launchApp(app) },
+                onLongClickApp = { app -> viewModel.onDockAppLongClick(app) },
+                onAddApp = { viewModel.openAddDockPicker() },
+                onOpenAbout = { viewModel.openAboutDialog() }
+            )
+        }
 
         // Overlay All Apps Drawer
         AppDrawerDialog(
@@ -137,6 +184,13 @@ fun HomeScreen(
             onCheckUpdate = { viewModel.checkForUpdates(isManualCheck = true) },
             onInstall = { viewModel.startDownloadAndInstall() },
             onDismiss = { viewModel.dismissAboutDialog() },
+            homeStyle = homeStyle,
+            onHomeStyleChange = { style ->
+                viewModel.setHomeStyle(style)
+                if (style == HomeStyle.DASHBOARD && !hasLocationPermission) onRequestLocationPermission()
+            },
+            dockSize = dockSize,
+            onDockSizeChange = { size -> viewModel.setDockSize(size) },
             minimalPalette = minimalPalette,
             onSelectMinimalPalette = { palette -> viewModel.selectMinimalPalette(palette) },
             isAutoStartEnabled = isAutoStartEnabled,
@@ -146,6 +200,8 @@ fun HomeScreen(
             isStatusBarShown = isStatusBarShown,
             onStatusBarShownChange = { shown -> viewModel.setStatusBarShown(shown) },
             nightDimMode = nightDimMode,
+            nightDimStrength = nightDimStrength,
+            onNightDimStrengthChange = { strength -> viewModel.setNightDimStrength(strength) },
             nightDimStartMinute = nightDimStartMinute,
             nightDimEndMinute = nightDimEndMinute,
             onNightDimModeChange = { mode -> viewModel.setNightDimMode(mode) },

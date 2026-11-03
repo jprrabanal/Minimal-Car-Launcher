@@ -9,6 +9,17 @@ A lightweight, distraction-free, and high-contrast Android Home Launcher designe
 - **Minimal Home Screen**: a large 12-hour clock with the date (for example *Friday, Aug. 21, 2026*) in the center, and one centered bottom bar with All Apps, **Android Auto**, your pinned apps and About.
   - Always a soft dark theme (no pure black or pure white). Pick from 6 colors in **About → Minimal Colors**: Slate, Midnight Blue, Graphite, Forest, Plum and Mocha.
   - Scales to common head-unit screens: 1024x600, 1280x720, 1280x800 and 2000x1200.
+- **Dashboard Home Screen** (optional): a second style with more features. Choose it in **About → Home Screen Style**. The Minimal style stays the default and does not change.
+  - **Clock and Weather**: the time, the date, and the current weather (for example *31°C · Rain · Quezon City*). Weather comes from the free Open-Meteo service. It needs internet, such as your phone's hotspot.
+  - **GPS Speed**: your speed in km/h from the head unit's GPS (Global Positioning System).
+  - **Music Controls**: song name, artist and album picture, plus Previous, Play/Pause and Next. Works with Spotify, YouTube Music, radio apps and more. Tap the song to open the music app.
+  - **Quick Buttons**: Brightness (Low, Medium, High), Volume, Bluetooth settings and Wi-Fi settings.
+  - **Bigger Bottom Bar**: choose the button size in **About → Home Screen Style**: Normal, Large (default) or Extra Large.
+  - **Permissions** (asked only when you use the Dashboard):
+    - *Location*: for the speed and the weather.
+    - *Notification Access*: for the music controls. Tap the Music card, then turn on **Car Launcher**. The launcher does not read or show your notifications.
+    - *Modify system settings*: for the Brightness button. The first tap opens the screen where you allow it.
+  - GPS and music updates run only while the Dashboard is on screen, to save power.
 - **Android Auto Button**: a round icon in the center of the bar. Auto-detects your head unit's ZLink installation (`com.zjinnova.zlink`, `com.xyauto.zlink`, etc.) and launches Android Auto in one tap.
 - **Hardware Back Button**: closes open windows. On the home screen it takes you back to the last app you opened from the launcher (for example Android Auto).
 - **Night Dimming**: darker colors at night, so the screen does not glare. Choose in **About → Night Dimming**:
@@ -16,6 +27,7 @@ A lightweight, distraction-free, and high-contrast Android Home Launcher designe
   - **Auto**: follows the head unit's own night mode (on many head units this turns on with the headlights).
   - **Schedule** (default): darker between two times you choose, 6:00 PM to 6:00 AM at first.
   - **Always**: always darker.
+  - **Dimming Strength**: how much darker it gets: Light, Medium (default), Strong or Maximum. Text stays readable at every level.
 - **Head Unit Top Bar**: the status bar stays visible and matches the launcher color. Turn it off in **About → Show Top Bar**.
 - **Customizable Bottom Dock**:
   - **Long-Press Any Icon**: Choose to **Remove** it or **Replace** it with another installed app.

@@ -21,3 +21,19 @@ enum class NightDimMode(val label: String) {
             values().firstOrNull { it.name == name } ?: DEFAULT
     }
 }
+
+/** How much darker Night Dimming makes the screen. */
+enum class NightDimStrength(val label: String, val amount: Float) {
+    LIGHT("Light", 0.25f),
+    MEDIUM("Medium", 0.45f),
+    STRONG("Strong", 0.6f),
+    MAXIMUM("Maximum", 0.75f);
+
+    companion object {
+        /** Medium is the same strength as before this setting existed. */
+        val DEFAULT = MEDIUM
+
+        fun fromName(name: String?): NightDimStrength =
+            values().firstOrNull { it.name == name } ?: DEFAULT
+    }
+}
