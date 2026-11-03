@@ -32,6 +32,8 @@ class AppRepository(private val context: Context) {
         private const val KEY_NIGHT_DIM_MODE = "key_night_dim_mode"
         private const val KEY_NIGHT_DIM_START = "key_night_dim_start_minute"
         private const val KEY_NIGHT_DIM_END = "key_night_dim_end_minute"
+        private const val KEY_HOME_STYLE = "key_home_style"
+        private const val KEY_DOCK_SIZE = "key_dashboard_dock_size"
         const val DEFAULT_NIGHT_START_MINUTE = 18 * 60 // 6:00 PM
         const val DEFAULT_NIGHT_END_MINUTE = 6 * 60    // 6:00 AM
         const val MAX_DOCK_APPS = 6
@@ -262,6 +264,20 @@ class AppRepository(private val context: Context) {
             .putInt(KEY_NIGHT_DIM_START, startMinute)
             .putInt(KEY_NIGHT_DIM_END, endMinute)
             .apply()
+    }
+
+    /** Home screen style: Minimal (default) or Dashboard. */
+    fun getHomeStyle(): HomeStyle = HomeStyle.fromName(prefs.getString(KEY_HOME_STYLE, null))
+
+    fun setHomeStyle(style: HomeStyle) {
+        prefs.edit().putString(KEY_HOME_STYLE, style.name).apply()
+    }
+
+    /** Size of the Dashboard's bottom bar buttons. */
+    fun getDockSize(): DockSize = DockSize.fromName(prefs.getString(KEY_DOCK_SIZE, null))
+
+    fun setDockSize(size: DockSize) {
+        prefs.edit().putString(KEY_DOCK_SIZE, size.name).apply()
     }
 
     fun getMinimalPaletteName(): String? = prefs.getString(KEY_MINIMAL_PALETTE, null)

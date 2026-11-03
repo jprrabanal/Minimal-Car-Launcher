@@ -1,10 +1,12 @@
 package com.minimal.carlauncher.ui
 
+import android.Manifest
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.SideEffect
@@ -24,6 +26,29 @@ import com.minimal.carlauncher.ui.viewmodel.LauncherViewModel
 class MainActivity : ComponentActivity() {
 
     private val viewModel: LauncherViewModel by viewModels()
+
+    // Location for the Dashboard's speed and weather
+    private val locationPermissionRequest = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { viewModel.onLocationPermissionResult() }
+
+    /**
+     * Asks for location. If the user said "Don't ask again" before, Android
+     * shows nothing, so open the app's settings page instead.
+     */
+    private fun requestLocationPermission() {
+        val askedBefore = getPreferences(MODE_PRIVATE).getBoolean(KEY_ASKED_LOCATION, false)
+        val canShowDialog = !askedBefore ||
+            shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)
+        if (canShowDialog) {
+            getPreferences(MODE_PRIVATE).edit().putBoolean(KEY_ASKED_LOCATION, true).apply()
+            locationPermissionRequest.launch(
+                arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+            )
+        } else {
+            viewModel.openLocationAppSettings()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,7 +85,10 @@ class MainActivity : ComponentActivity() {
                         e.printStackTrace()
                     }
                 }
-                HomeScreen(viewModel = viewModel)
+                HomeScreen(
+                    viewModel = viewModel,
+                    onRequestLocationPermission = { requestLocationPermission() }
+                )
             }
         }
     }
@@ -69,6 +97,16 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         applySystemBars()
         viewModel.loadApps()
+        viewModel.onScreenVisible()
+    }
+
+    override fun onPause() {
+        viewModel.onScreenHidden()
+        super.onPause()
+    }
+
+    companion object {
+        private const val KEY_ASKED_LOCATION = "asked_location_permission"
     }
 
     /** Shows or hides the head unit's top bar (status bar), as chosen in settings. */

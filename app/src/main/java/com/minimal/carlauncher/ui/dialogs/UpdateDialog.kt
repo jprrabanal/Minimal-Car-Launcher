@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayCircle
@@ -55,6 +56,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.minimal.carlauncher.data.DockSize
+import com.minimal.carlauncher.data.HomeStyle
 import com.minimal.carlauncher.data.NightDimMode
 import com.minimal.carlauncher.service.UpdateInfo
 import com.minimal.carlauncher.ui.theme.MinimalPalette
@@ -77,6 +80,10 @@ fun AboutDialog(
     onCheckUpdate: () -> Unit,
     onInstall: () -> Unit,
     onDismiss: () -> Unit,
+    homeStyle: HomeStyle = HomeStyle.DEFAULT,
+    onHomeStyleChange: (HomeStyle) -> Unit = {},
+    dockSize: DockSize = DockSize.DEFAULT,
+    onDockSizeChange: (DockSize) -> Unit = {},
     minimalPalette: MinimalPalette = MinimalPalette.DEFAULT,
     onSelectMinimalPalette: (MinimalPalette) -> Unit = {},
     isAutoStartEnabled: Boolean = false,
@@ -531,7 +538,17 @@ fun AboutDialog(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // 4. Colors: soft dark themes
+                    // 4. Home screen style: Minimal or Dashboard
+                    HomeStyleSetting(
+                        style = homeStyle,
+                        onStyleChange = onHomeStyleChange,
+                        dockSize = dockSize,
+                        onDockSizeChange = onDockSizeChange
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Colors: soft dark themes
                     MinimalPalettePicker(
                         selected = minimalPalette,
                         onSelect = onSelectMinimalPalette
@@ -832,6 +849,116 @@ private fun NightDimSetting(
                 ) {
                     Text("To ${formatMinuteOfDay(endMinute)}", color = TextPrimary, fontSize = 12.sp)
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun HomeStyleSetting(
+    style: HomeStyle,
+    onStyleChange: (HomeStyle) -> Unit,
+    dockSize: DockSize,
+    onDockSizeChange: (DockSize) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(CarSurfaceVariant)
+            .border(1.dp, CarBorder, RoundedCornerShape(12.dp))
+            .padding(horizontal = 14.dp, vertical = 10.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(AccentCyan.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Dashboard,
+                    contentDescription = null,
+                    tint = AccentCyan,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Column {
+                Text(
+                    text = "Home Screen Style",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Text(
+                    text = "${style.label}: ${style.description}",
+                    fontSize = 11.sp,
+                    color = TextSecondary
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+        ChoiceRow(
+            options = HomeStyle.values().toList(),
+            selected = style,
+            label = { it.label },
+            onSelect = onStyleChange
+        )
+
+        if (style == HomeStyle.DASHBOARD) {
+            Spacer(modifier = Modifier.height(10.dp))
+            Text(
+                text = "Bottom Bar Button Size",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            ChoiceRow(
+                options = DockSize.values().toList(),
+                selected = dockSize,
+                label = { it.label },
+                onSelect = onDockSizeChange
+            )
+        }
+    }
+}
+
+/** A row of equal-width buttons; the selected one is highlighted. */
+@Composable
+private fun <T> ChoiceRow(
+    options: List<T>,
+    selected: T,
+    label: (T) -> String,
+    onSelect: (T) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        options.forEach { option ->
+            val isSelected = option == selected
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(if (isSelected) AccentCyan.copy(alpha = 0.2f) else Color.Transparent)
+                    .border(1.dp, if (isSelected) AccentCyan else CarBorder, RoundedCornerShape(10.dp))
+                    .clickable { onSelect(option) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = label(option),
+                    fontSize = 12.sp,
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isSelected) AccentCyan else TextSecondary
+                )
             }
         }
     }

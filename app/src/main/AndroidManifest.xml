@@ -7,6 +7,15 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <!-- Dashboard: GPS speed and the place for the weather (asked only when the Dashboard is used) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Dashboard: Brightness button (the user allows it in a system screen) -->
+    <uses-permission
+        android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+
     <!-- Ability to list all installed applications on Android 11+ (API 30+) -->
     <uses-permission
         android:name="android.permission.QUERY_ALL_PACKAGES"
@@ -15,6 +24,9 @@
     <!-- Non-mandatory hardware features so the APK installs on any device/head unit -->
     <uses-feature
         android:name="android.hardware.touchscreen"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.location.gps"
         android:required="false" />
 
     <application
@@ -50,6 +62,18 @@
             android:exported="false"
             android:screenOrientation="sensorLandscape"
             android:theme="@style/Theme.CarLauncher" />
+
+        <!-- Dashboard music controls: lets the launcher see what is playing and send
+             Play/Pause/Next. The user turns it on in Notification Access. -->
+        <service
+            android:name=".service.MediaListenerService"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
 
         <!-- FileProvider for installing downloaded APK updates -->
         <provider

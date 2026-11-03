@@ -1,14 +1,25 @@
 package com.minimal.carlauncher.ui.viewmodel
 
 import android.app.Application
+import android.location.Location
+import android.os.SystemClock
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.minimal.carlauncher.data.AppInfo
 import com.minimal.carlauncher.data.AppRepository
+import com.minimal.carlauncher.data.DockSize
+import com.minimal.carlauncher.data.HomeStyle
 import com.minimal.carlauncher.data.NightDimMode
+import com.minimal.carlauncher.service.BrightnessLevel
+import com.minimal.carlauncher.service.LocationMonitor
+import com.minimal.carlauncher.service.MusicMonitor
+import com.minimal.carlauncher.service.NowPlaying
+import com.minimal.carlauncher.service.QuickControls
 import com.minimal.carlauncher.service.UpdateInfo
 import com.minimal.carlauncher.service.UpdateManager
+import com.minimal.carlauncher.service.WeatherInfo
+import com.minimal.carlauncher.service.WeatherService
 import com.minimal.carlauncher.ui.theme.MinimalPalette
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -29,6 +40,37 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     private val repository = AppRepository(application)
     private val updateManager = UpdateManager(application)
+    private val musicMonitor = MusicMonitor(application)
+    private val locationMonitor = LocationMonitor(application)
+    private val weatherService = WeatherService(application)
+    private val quickControls = QuickControls(application)
+
+    // Home screen style: Minimal (default) or Dashboard
+    private val _homeStyle = MutableStateFlow(repository.getHomeStyle())
+    val homeStyle: StateFlow<HomeStyle> = _homeStyle.asStateFlow()
+
+    private val _dockSize = MutableStateFlow(repository.getDockSize())
+    val dockSize: StateFlow<DockSize> = _dockSize.asStateFlow()
+
+    // Dashboard: music, GPS speed, weather and brightness
+    val nowPlaying: StateFlow<NowPlaying?> = musicMonitor.nowPlaying
+    val hasMusicAccess: StateFlow<Boolean> = musicMonitor.hasAccess
+    val speedKmh: StateFlow<Int?> = locationMonitor.speedKmh
+
+    private val _hasLocationPermission = MutableStateFlow(locationMonitor.hasPermission())
+    val hasLocationPermission: StateFlow<Boolean> = _hasLocationPermission.asStateFlow()
+
+    private val _weather = MutableStateFlow<WeatherInfo?>(null)
+    val weather: StateFlow<WeatherInfo?> = _weather.asStateFlow()
+
+    private val _brightnessLevel = MutableStateFlow(quickControls.currentBrightness())
+    val brightnessLevel: StateFlow<BrightnessLevel> = _brightnessLevel.asStateFlow()
+
+    private var isScreenVisible = false
+    private var weatherFetchedAt = 0L
+    private var weatherAttemptedAt = 0L
+    private var weatherFetchedFor: Location? = null
+    private var isFetchingWeather = false
 
     // Applications State
     private val _allApps = MutableStateFlow<List<AppInfo>>(emptyList())
@@ -130,6 +172,11 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         loadApps()
         startClockTicker()
         runAutoStartIfNeeded()
+        viewModelScope.launch {
+            locationMonitor.lastLocation.collect { location ->
+                if (location != null) maybeFetchWeather(location)
+            }
+        }
     }
 
     private fun runAutoStartIfNeeded() {
@@ -176,6 +223,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
                 _minimalAmPm.value = amPmFormat.format(now).uppercase(Locale.getDefault())
                 _minimalDate.value = formatMinimalDate(now)
                 updateNightDim(now)
+                if (isScreenVisible && _homeStyle.value == HomeStyle.DASHBOARD) {
+                    locationMonitor.clearStaleSpeed()
+                    locationMonitor.lastLocation.value?.let { maybeFetchWeather(it) }
+                }
                 delay(1000L)
             }
         }
@@ -437,7 +488,118 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         repository.setMinimalPaletteName(palette.name)
     }
 
+    // --- Home Screen Style & Dashboard ---
+
+    fun setHomeStyle(style: HomeStyle) {
+        repository.setHomeStyle(style)
+        _homeStyle.value = style
+        refreshDashboardSources()
+    }
+
+    fun setDockSize(size: DockSize) {
+        repository.setDockSize(size)
+        _dockSize.value = size
+    }
+
+    /** The launcher is on screen (onResume). */
+    fun onScreenVisible() {
+        isScreenVisible = true
+        refreshDashboardSources()
+    }
+
+    /** Another app is on screen (onPause): stop the GPS and music updates to save power. */
+    fun onScreenHidden() {
+        isScreenVisible = false
+        refreshDashboardSources()
+    }
+
+    /** Called after the user answers the location permission request. */
+    fun onLocationPermissionResult() {
+        refreshDashboardSources()
+    }
+
+    /** Starts the GPS and music updates only while the Dashboard is on screen. */
+    private fun refreshDashboardSources() {
+        _hasLocationPermission.value = locationMonitor.hasPermission()
+        musicMonitor.checkAccess()
+        _brightnessLevel.value = quickControls.currentBrightness()
+        if (isScreenVisible && _homeStyle.value == HomeStyle.DASHBOARD) {
+            locationMonitor.start()
+            musicMonitor.start()
+        } else {
+            locationMonitor.stop()
+            musicMonitor.stop()
+        }
+    }
+
+    private fun maybeFetchWeather(location: Location) {
+        if (isFetchingWeather || _homeStyle.value != HomeStyle.DASHBOARD) return
+        val now = SystemClock.elapsedRealtime()
+        val last = weatherFetchedFor
+        val isDue = _weather.value == null ||
+            now - weatherFetchedAt > WEATHER_REFRESH_MS ||
+            (last != null && last.distanceTo(location) > WEATHER_REFRESH_DISTANCE_M)
+        // After a failure (for example, no internet yet), wait before trying again
+        if (!isDue || (weatherAttemptedAt != 0L && now - weatherAttemptedAt < WEATHER_RETRY_MS)) return
+        isFetchingWeather = true
+        weatherAttemptedAt = now
+        viewModelScope.launch {
+            val result = weatherService.fetch(location.latitude, location.longitude)
+            if (result != null) {
+                _weather.value = result
+                weatherFetchedAt = SystemClock.elapsedRealtime()
+                weatherFetchedFor = location
+            }
+            isFetchingWeather = false
+        }
+    }
+
+    fun musicPlayPause() = musicMonitor.playPause()
+    fun musicNext() = musicMonitor.next()
+    fun musicPrevious() = musicMonitor.previous()
+
+    /** Opens the app that is playing music, so the user can pick a song. */
+    fun openMusicApp() {
+        nowPlaying.value?.packageName?.let { repository.launchPackage(it) }
+    }
+
+    fun openNotificationAccess() {
+        quickControls.openNotificationAccessSettings()
+        Toast.makeText(getApplication(), "Turn on Car Launcher to show music controls", Toast.LENGTH_LONG).show()
+    }
+
+    fun openLocationAppSettings() {
+        quickControls.openAppSettings()
+        Toast.makeText(getApplication(), "Allow Location for Car Launcher", Toast.LENGTH_LONG).show()
+    }
+
+    /** Brightness button: Low → Medium → High. Asks for the permission first if needed. */
+    fun cycleBrightness() {
+        if (!quickControls.canChangeBrightness()) {
+            quickControls.openBrightnessPermission()
+            Toast.makeText(getApplication(), "Allow Car Launcher to change system settings", Toast.LENGTH_LONG).show()
+            return
+        }
+        val next = quickControls.currentBrightness().next()
+        if (quickControls.setBrightness(next)) {
+            _brightnessLevel.value = next
+        }
+    }
+
+    fun showVolumePanel() = quickControls.showVolumePanel()
+    fun openBluetoothSettings() = quickControls.openBluetoothSettings()
+    fun openWifiSettings() = quickControls.openWifiSettings()
+
+    override fun onCleared() {
+        locationMonitor.stop()
+        musicMonitor.stop()
+        super.onCleared()
+    }
+
     companion object {
+        private const val WEATHER_REFRESH_MS = 30 * 60_000L
+        private const val WEATHER_RETRY_MS = 2 * 60_000L
+        private const val WEATHER_REFRESH_DISTANCE_M = 10_000f
         private const val AUTOSTART_DELAY_MS = 4000L
         private const val AUTOSTART_HEARTBEAT_MS = 60_000L
 
