@@ -70,7 +70,13 @@ class MainActivity : ComponentActivity() {
             val isScheduledDim by viewModel.isNightDimmed.collectAsState()
             // Auto: follow the head unit's own night mode (on many units, the headlights)
             val headUnitNight = isSystemInDarkTheme()
-            val isNightDimmed = if (nightDimMode == NightDimMode.AUTO) headUnitNight else isScheduledDim
+            val isDimAllAppsEnabled by viewModel.isDimAllAppsEnabled.collectAsState()
+            val canDrawOverlays by viewModel.canDrawOverlays.collectAsState()
+            // When Dim All Apps is running, its layer already darkens the launcher too:
+            // do not darken the launcher's own colors as well, or it gets dimmed twice.
+            val isDimmedByLayer = isDimAllAppsEnabled && canDrawOverlays
+            val isNightDimmed = !isDimmedByLayer &&
+                (if (nightDimMode == NightDimMode.AUTO) headUnitNight else isScheduledDim)
             val nightDimStrength by viewModel.nightDimStrength.collectAsState()
             CarLauncherTheme(
                 palette = minimalPalette,
