@@ -12,6 +12,7 @@ import com.minimal.carlauncher.data.DockSize
 import com.minimal.carlauncher.data.HomeStyle
 import com.minimal.carlauncher.data.NightDimMode
 import com.minimal.carlauncher.data.NightDimStrength
+import com.minimal.carlauncher.service.AndroidSettingsPage
 import com.minimal.carlauncher.service.BrightnessLevel
 import com.minimal.carlauncher.service.LocationMonitor
 import com.minimal.carlauncher.service.MusicMonitor
@@ -651,6 +652,17 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         val next = quickControls.currentBrightness().next()
         if (quickControls.setBrightness(next)) {
             _brightnessLevel.value = next
+        }
+    }
+
+    /** About > Android Settings: opens the normal (often hidden) Android Settings app. */
+    fun openAndroidSettings(page: AndroidSettingsPage) {
+        if (!quickControls.openAndroidSettings(page)) {
+            Toast.makeText(
+                getApplication(),
+                "This head unit does not allow opening Android ${page.label} settings",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 

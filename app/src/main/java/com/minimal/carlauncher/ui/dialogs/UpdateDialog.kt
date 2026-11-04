@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.VerticalAlignTop
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -60,6 +61,7 @@ import com.minimal.carlauncher.data.DockSize
 import com.minimal.carlauncher.data.HomeStyle
 import com.minimal.carlauncher.data.NightDimMode
 import com.minimal.carlauncher.data.NightDimStrength
+import com.minimal.carlauncher.service.AndroidSettingsPage
 import com.minimal.carlauncher.service.UpdateInfo
 import com.minimal.carlauncher.ui.theme.MinimalPalette
 import com.minimal.carlauncher.ui.theme.AccentCyan
@@ -102,6 +104,7 @@ fun AboutDialog(
     onAllowOverlay: () -> Unit = {},
     isFullCoverDimmerOn: Boolean = false,
     onOpenFullCoverSettings: () -> Unit = {},
+    onOpenAndroidSettings: (AndroidSettingsPage) -> Unit = {},
     nightDimStartMinute: Int = 18 * 60,
     nightDimEndMinute: Int = 6 * 60,
     onNightDimModeChange: (NightDimMode) -> Unit = {},
@@ -654,6 +657,11 @@ fun AboutDialog(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
+                    // Android Settings: the normal Android settings, hidden on many head units
+                    AndroidSettingsCard(onOpen = onOpenAndroidSettings)
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
                     // 7. Show the head unit's top bar (status bar)
                     Box(
                         modifier = Modifier
@@ -1085,6 +1093,75 @@ private fun <T> ChoiceRow(
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                     color = if (isSelected) AccentCyan else TextSecondary
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AndroidSettingsCard(onOpen: (AndroidSettingsPage) -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(CarSurfaceVariant)
+            .border(1.dp, CarBorder, RoundedCornerShape(12.dp))
+            .padding(horizontal = 14.dp, vertical = 10.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(AccentCyan.copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = null,
+                    tint = AccentCyan,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            Column {
+                Text(
+                    text = "Android Settings",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+                Text(
+                    text = "The normal Android settings, which many head units hide",
+                    fontSize = 11.sp,
+                    color = TextSecondary
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            AndroidSettingsPage.values().forEach { page ->
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(36.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .border(1.dp, CarBorder, RoundedCornerShape(10.dp))
+                        .clickable { onOpen(page) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = page.label,
+                        fontSize = 12.sp,
+                        color = TextPrimary,
+                        maxLines = 1
+                    )
+                }
             }
         }
     }

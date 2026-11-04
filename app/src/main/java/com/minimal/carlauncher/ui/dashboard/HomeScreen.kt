@@ -211,6 +211,7 @@ fun HomeScreen(
             onAllowOverlay = { viewModel.openOverlayPermission() },
             isFullCoverDimmerOn = isFullCoverDimmerOn,
             onOpenFullCoverSettings = { viewModel.openFullCoverDimmerSettings() },
+            onOpenAndroidSettings = { page -> viewModel.openAndroidSettings(page) },
             nightDimStartMinute = nightDimStartMinute,
             nightDimEndMinute = nightDimEndMinute,
             onNightDimModeChange = { mode -> viewModel.setNightDimMode(mode) },

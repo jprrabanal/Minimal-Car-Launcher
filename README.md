@@ -35,6 +35,7 @@ A lightweight, distraction-free, and high-contrast Android Home Launcher designe
     - Turn off other dimmer apps (like Night Screen) so the screen is not dimmed twice.
     - **Cover Top Bar and Navigation Bar**: Android always keeps the top bar and the navigation bar above normal app layers. To darken them too, tap this row in **About → Night Dimming** and turn on **Car Launcher Screen Dimmer** in Accessibility settings. It only draws the dark layer; it does not read the screen or your apps. It also stays running better, so the "Display over other apps" permission and the notification are not needed while it is on.
       - On Android 13 and newer, sideloaded apps may show "Restricted setting". Open **Settings → Apps → Car Launcher**, tap the **⋮** menu, choose **Allow restricted settings**, then try again.
+- **Android Settings Shortcuts**: many head units hide the normal Android Settings app and show only their own car settings. **About → Android Settings** opens it anyway: **All Settings**, **Apps**, **Accessibility** or **Display**.
 - **Head Unit Top Bar**: the status bar stays visible and matches the launcher color. Turn it off in **About → Show Top Bar**.
 - **Customizable Bottom Dock**:
   - **Long-Press Any Icon**: Choose to **Remove** it or **Replace** it with another installed app.
