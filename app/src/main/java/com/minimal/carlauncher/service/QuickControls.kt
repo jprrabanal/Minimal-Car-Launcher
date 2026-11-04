@@ -65,6 +65,9 @@ class QuickControls(private val context: Context) {
         )
     }
 
+    /** Opens Accessibility settings, where the user turns on the full-cover screen dimmer. */
+    fun openAccessibilitySettings() = startSettings(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+
     /** Shows the system volume slider for music. */
     fun showVolumePanel() {
         try {

@@ -9,21 +9,15 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.content.res.Configuration
-import android.graphics.Color
-import android.graphics.PixelFormat
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.provider.Settings
-import android.view.View
 import android.view.WindowManager
 import com.minimal.carlauncher.R
 import com.minimal.carlauncher.data.AppRepository
-import com.minimal.carlauncher.data.NightDimMode
 import com.minimal.carlauncher.ui.MainActivity
-import com.minimal.carlauncher.ui.viewmodel.LauncherViewModel
-import java.util.Calendar
 
 /**
  * Dim All Apps: a see-through black layer over the whole head unit screen
@@ -36,13 +30,16 @@ import java.util.Calendar
  * Runs as a foreground service so the head unit is less likely to close it,
  * and START_STICKY so Android starts it again if it is closed anyway. The
  * launcher also restarts it every time the home screen opens.
+ *
+ * Android keeps the top bar and the navigation bar above this kind of layer.
+ * When the user turns on [ScreenDimAccessibilityService], that service draws
+ * the layer instead (it can cover the bars too) and this one stops.
  */
 class ScreenDimService : Service() {
 
     private lateinit var repository: AppRepository
     private val handler = Handler(Looper.getMainLooper())
-    private var overlay: View? = null
-    private var shownAlpha = -1f
+    private lateinit var overlay: DimOverlay
 
     private val ticker = object : Runnable {
         override fun run() {
@@ -56,6 +53,7 @@ class ScreenDimService : Service() {
     override fun onCreate() {
         super.onCreate()
         repository = AppRepository(this)
+        overlay = DimOverlay(this, WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY)
         handler.post(ticker)
     }
 
@@ -68,92 +66,29 @@ class ScreenDimService : Service() {
         return START_STICKY
     }
 
-    /** Auto mode follows the head unit's night mode, which arrives here. */
+    /** Auto mode follows the head unit's night mode, which arrives here. Also catches rotation. */
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
+        overlay.refreshSize()
         update()
     }
 
     override fun onDestroy() {
         handler.removeCallbacks(ticker)
-        removeOverlay()
+        overlay.hide()
         super.onDestroy()
     }
 
     private fun update() {
-        if (!repository.isDimAllAppsEnabled() || !Settings.canDrawOverlays(this)) {
-            removeOverlay()
+        val shouldRun = repository.isDimAllAppsEnabled() &&
+            Settings.canDrawOverlays(this) &&
+            !ScreenDimAccessibilityService.isRunning
+        if (!shouldRun) {
+            overlay.hide()
             stopSelf()
             return
         }
-        val alpha = if (shouldDimNow()) {
-            repository.getNightDimStrength().amount.coerceAtMost(MAX_ALPHA)
-        } else {
-            0f
-        }
-        if (alpha <= 0f) removeOverlay() else showOverlay(alpha)
-    }
-
-    private fun shouldDimNow(): Boolean = when (repository.getNightDimMode()) {
-        NightDimMode.OFF -> false
-        NightDimMode.ALWAYS -> true
-        NightDimMode.AUTO ->
-            (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
-                Configuration.UI_MODE_NIGHT_YES
-        NightDimMode.SCHEDULE -> {
-            val now = Calendar.getInstance()
-            val minute = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
-            LauncherViewModel.isWithinNight(
-                minute,
-                repository.getNightDimStartMinute(),
-                repository.getNightDimEndMinute()
-            )
-        }
-    }
-
-    private fun showOverlay(alpha: Float) {
-        val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        val current = overlay
-        if (current != null) {
-            if (alpha != shownAlpha) {
-                val params = current.layoutParams as WindowManager.LayoutParams
-                params.alpha = alpha
-                runCatching { windowManager.updateViewLayout(current, params) }
-                shownAlpha = alpha
-            }
-            return
-        }
-        val view = View(this).apply { setBackgroundColor(Color.BLACK) }
-        val params = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.MATCH_PARENT,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
-            PixelFormat.TRANSLUCENT
-        ).apply {
-            // The window's own alpha (not the view's): Android 12+ lets taps pass
-            // through a see-through layer only when this is 0.8 or less.
-            this.alpha = alpha
-        }
-        try {
-            windowManager.addView(view, params)
-            overlay = view
-            shownAlpha = alpha
-        } catch (e: Exception) {
-            // Permission was taken away, or the head unit refused the layer
-            e.printStackTrace()
-        }
-    }
-
-    private fun removeOverlay() {
-        val view = overlay ?: return
-        val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        runCatching { windowManager.removeView(view) }
-        overlay = null
-        shownAlpha = -1f
+        overlay.show(DimOverlay.currentAlpha(this, repository).coerceAtMost(DimOverlay.MAX_APP_LAYER_ALPHA))
     }
 
     /** Shows the small "Screen dimmer is on" notification that keeps the service alive. */
@@ -196,9 +131,6 @@ class ScreenDimService : Service() {
         private const val NOTIFICATION_ID = 4201
         private const val CHECK_INTERVAL_MS = 30_000L
 
-        /** Android 12+ blocks taps through layers darker than 0.8. */
-        private const val MAX_ALPHA = 0.8f
-
         /** True if the user allowed "Display over other apps". */
         fun canDrawOverlays(context: Context): Boolean = Settings.canDrawOverlays(context)
 
@@ -209,8 +141,12 @@ class ScreenDimService : Service() {
          */
         fun sync(context: Context) {
             val app = context.applicationContext
+            // The accessibility layer (covers the bars too) takes over when it is on
+            ScreenDimAccessibilityService.refreshNow()
             val intent = Intent(app, ScreenDimService::class.java)
-            val shouldRun = AppRepository(app).isDimAllAppsEnabled() && canDrawOverlays(app)
+            val shouldRun = AppRepository(app).isDimAllAppsEnabled() &&
+                canDrawOverlays(app) &&
+                !ScreenDimAccessibilityService.isRunning
             try {
                 if (shouldRun) {
                     app.startForegroundService(intent)

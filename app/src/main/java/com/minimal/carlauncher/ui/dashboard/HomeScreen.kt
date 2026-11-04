@@ -60,6 +60,7 @@ fun HomeScreen(
     val nightDimStrength by viewModel.nightDimStrength.collectAsState()
     val isDimAllAppsEnabled by viewModel.isDimAllAppsEnabled.collectAsState()
     val canDrawOverlays by viewModel.canDrawOverlays.collectAsState()
+    val isFullCoverDimmerOn by viewModel.isFullCoverDimmerOn.collectAsState()
     val nightDimStartMinute by viewModel.nightDimStartMinute.collectAsState()
     val nightDimEndMinute by viewModel.nightDimEndMinute.collectAsState()
 
@@ -208,6 +209,8 @@ fun HomeScreen(
             canDrawOverlays = canDrawOverlays,
             onDimAllAppsChange = { enabled -> viewModel.setDimAllAppsEnabled(enabled) },
             onAllowOverlay = { viewModel.openOverlayPermission() },
+            isFullCoverDimmerOn = isFullCoverDimmerOn,
+            onOpenFullCoverSettings = { viewModel.openFullCoverDimmerSettings() },
             nightDimStartMinute = nightDimStartMinute,
             nightDimEndMinute = nightDimEndMinute,
             onNightDimModeChange = { mode -> viewModel.setNightDimMode(mode) },

@@ -74,7 +74,8 @@ class MainActivity : ComponentActivity() {
             val canDrawOverlays by viewModel.canDrawOverlays.collectAsState()
             // When Dim All Apps is running, its layer already darkens the launcher too:
             // do not darken the launcher's own colors as well, or it gets dimmed twice.
-            val isDimmedByLayer = isDimAllAppsEnabled && canDrawOverlays
+            val isFullCoverDimmerOn by viewModel.isFullCoverDimmerOn.collectAsState()
+            val isDimmedByLayer = isDimAllAppsEnabled && (canDrawOverlays || isFullCoverDimmerOn)
             val isNightDimmed = !isDimmedByLayer &&
                 (if (nightDimMode == NightDimMode.AUTO) headUnitNight else isScheduledDim)
             val nightDimStrength by viewModel.nightDimStrength.collectAsState()

@@ -17,6 +17,7 @@ import com.minimal.carlauncher.service.LocationMonitor
 import com.minimal.carlauncher.service.MusicMonitor
 import com.minimal.carlauncher.service.NowPlaying
 import com.minimal.carlauncher.service.QuickControls
+import com.minimal.carlauncher.service.ScreenDimAccessibilityService
 import com.minimal.carlauncher.service.ScreenDimService
 import com.minimal.carlauncher.service.UpdateInfo
 import com.minimal.carlauncher.service.UpdateManager
@@ -138,6 +139,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
 
     private val _canDrawOverlays = MutableStateFlow(ScreenDimService.canDrawOverlays(application))
     val canDrawOverlays: StateFlow<Boolean> = _canDrawOverlays.asStateFlow()
+
+    // Dim All Apps full cover (top bar and navigation bar too), turned on in Accessibility settings
+    private val _isFullCoverDimmerOn = MutableStateFlow(ScreenDimAccessibilityService.isEnabledInSettings(application))
+    val isFullCoverDimmerOn: StateFlow<Boolean> = _isFullCoverDimmerOn.asStateFlow()
 
     private val _nightDimStartMinute = MutableStateFlow(repository.getNightDimStartMinute())
     val nightDimStartMinute: StateFlow<Int> = _nightDimStartMinute.asStateFlow()
@@ -540,7 +545,10 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
     fun setDimAllAppsEnabled(enabled: Boolean) {
         repository.setDimAllAppsEnabled(enabled)
         _isDimAllAppsEnabled.value = enabled
-        if (enabled && !ScreenDimService.canDrawOverlays(getApplication())) {
+        if (enabled &&
+            !ScreenDimService.canDrawOverlays(getApplication()) &&
+            !ScreenDimAccessibilityService.isEnabledInSettings(getApplication())
+        ) {
             openOverlayPermission()
         }
         refreshDimAllApps()
@@ -551,8 +559,19 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         Toast.makeText(getApplication(), "Allow Car Launcher to display over other apps", Toast.LENGTH_LONG).show()
     }
 
+    /** Opens Accessibility settings to turn on "Car Launcher Screen Dimmer" (covers the bars too). */
+    fun openFullCoverDimmerSettings() {
+        quickControls.openAccessibilitySettings()
+        Toast.makeText(
+            getApplication(),
+            "Open \"Car Launcher Screen Dimmer\" and turn it on",
+            Toast.LENGTH_LONG
+        ).show()
+    }
+
     private fun refreshDimAllApps() {
         _canDrawOverlays.value = ScreenDimService.canDrawOverlays(getApplication())
+        _isFullCoverDimmerOn.value = ScreenDimAccessibilityService.isEnabledInSettings(getApplication())
         ScreenDimService.sync(getApplication())
     }
 
