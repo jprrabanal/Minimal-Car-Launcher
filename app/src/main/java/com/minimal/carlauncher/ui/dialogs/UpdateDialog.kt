@@ -100,6 +100,8 @@ fun AboutDialog(
     canDrawOverlays: Boolean = false,
     onDimAllAppsChange: (Boolean) -> Unit = {},
     onAllowOverlay: () -> Unit = {},
+    isFullCoverDimmerOn: Boolean = false,
+    onOpenFullCoverSettings: () -> Unit = {},
     nightDimStartMinute: Int = 18 * 60,
     nightDimEndMinute: Int = 6 * 60,
     onNightDimModeChange: (NightDimMode) -> Unit = {},
@@ -641,6 +643,8 @@ fun AboutDialog(
                         canDrawOverlays = canDrawOverlays,
                         onDimAllAppsChange = onDimAllAppsChange,
                         onAllowOverlay = onAllowOverlay,
+                        isFullCoverDimmerOn = isFullCoverDimmerOn,
+                        onOpenFullCoverSettings = onOpenFullCoverSettings,
                         startMinute = nightDimStartMinute,
                         endMinute = nightDimEndMinute,
                         onModeChange = onNightDimModeChange,
@@ -752,6 +756,8 @@ private fun NightDimSetting(
     canDrawOverlays: Boolean,
     onDimAllAppsChange: (Boolean) -> Unit,
     onAllowOverlay: () -> Unit,
+    isFullCoverDimmerOn: Boolean,
+    onOpenFullCoverSettings: () -> Unit,
     startMinute: Int,
     endMinute: Int,
     onModeChange: (NightDimMode) -> Unit,
@@ -871,7 +877,7 @@ private fun NightDimSetting(
 
             // Dim All Apps: the same dimming over Android Auto, maps and every other app
             Spacer(modifier = Modifier.height(10.dp))
-            val needsPermission = isDimAllAppsEnabled && !canDrawOverlays
+            val needsPermission = isDimAllAppsEnabled && !canDrawOverlays && !isFullCoverDimmerOn
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -908,6 +914,49 @@ private fun NightDimSetting(
                         checkedTrackColor = AccentCyan
                     )
                 )
+            }
+
+            // Full cover: Android keeps the top bar and navigation bar above normal app
+            // layers. The accessibility version of the dimmer can cover them too.
+            if (isDimAllAppsEnabled) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(10.dp))
+                        .border(
+                            1.dp,
+                            if (isFullCoverDimmerOn) AccentGreen.copy(alpha = 0.6f) else CarBorder,
+                            RoundedCornerShape(10.dp)
+                        )
+                        .clickable { onOpenFullCoverSettings() }
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Cover Top Bar and Navigation Bar",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = if (isFullCoverDimmerOn) {
+                                "On: the whole screen gets darker"
+                            } else {
+                                "Off: tap, open \"Car Launcher Screen Dimmer\" and turn it on"
+                            },
+                            fontSize = 11.sp,
+                            color = if (isFullCoverDimmerOn) AccentGreen else TextSecondary
+                        )
+                    }
+                    Icon(
+                        imageVector = if (isFullCoverDimmerOn) Icons.Default.Check else Icons.Default.VerticalAlignTop,
+                        contentDescription = null,
+                        tint = if (isFullCoverDimmerOn) AccentGreen else TextMuted,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
 

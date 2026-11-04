@@ -10,4 +10,7 @@
     <string name="unit_mph">MPH</string>
     <string name="speed_waiting">GPS…</string>
     <string name="search_apps_placeholder">Search car apps…</string>
+    <string name="dim_accessibility_label">Car Launcher Screen Dimmer</string>
+    <string name="dim_accessibility_summary">Darkens the whole screen at night, including the top bar and navigation bar</string>
+    <string name="dim_accessibility_description">Lets Car Launcher\'s Dim All Apps also darken the top bar and the navigation bar. It only draws a see-through dark layer. It does not read the screen, your apps or what you type.</string>
 </resources>
